@@ -1,6 +1,6 @@
 // SuggestedResults.js§
 import React, { useContext } from "react";
-import { VisaContext } from "../visa/VisaContext";
+import { VisaContext } from "../../visa/VisaContext";
 
 const SuggestedResults = () => {
   const { visaSuggestions } = useContext(VisaContext);

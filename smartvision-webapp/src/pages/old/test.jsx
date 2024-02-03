@@ -4,7 +4,7 @@ import { Navbar } from "react-bootstrap";
 import { Container } from "react-bootstrap";
 import { Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { VisaContext } from "../visa/VisaContext";
+import { VisaContext } from "../../visa/VisaContext";
 
 const Wrapper = styled.div`
   display: flex;

@@ -7,16 +7,16 @@ import { useNavigate } from "react-router-dom";
 // import { VisaContext } from "../visa/VisaContext";
 
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCountries } from "../../redux/features/country/countryThunks";
-import { fetchRegions } from "../../redux/features/region/regionThunks";
+import { fetchCountries } from "../../../redux/features/country/countryThunks";
+import { fetchRegions } from "../../../redux/features/region/regionThunks";
 
 import {
   setFromCountry,
   setToCountry,
   setPurposeOfTravel,
-} from "../../redux/features/country/travelSlice";
+} from "../../../redux/features/country/travelSlice";
 
-import { setRegion } from "../../redux/features/region/setregionSlice";
+import { setRegion } from "../../../redux/features/region/setregionSlice";
 
 const Wrapper = styled.div`
   display: flex;

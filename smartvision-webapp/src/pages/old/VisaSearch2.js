@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { VisaContext } from "../visa/VisaContext";
+import { VisaContext } from "../../visa/VisaContext";
 import {
   PageContainer,
   Header,
@@ -12,7 +12,7 @@ import {
   InputGroup,
   Input,
   Button,
-} from "../styled/VisaSearchStyles";
+} from "../../styled/VisaSearchStyles";
 
 const VisaSearch = () => {
   const navigate = useNavigate();

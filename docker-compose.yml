@@ -4,15 +4,28 @@ networks:
     name: shared_network
     driver: bridge
 services:
-  web-app-applicant:
+  smartvision-webapp:
     build:
       context: ./smartvision-webapp
       dockerfile: Dockerfile
     ports:
-      - "4004:80" # Maps port 80 from the container to 3004 on the host
+      - "3000:3000" # Maps port 80 from the container to 3004 on the host
     depends_on:
       - smartvision-db
+    volumes:
+      - ./smartvision-webapp:/usr/src/app
     networks:
       shared_network:
         aliases:
           - ui
+  smartvision-db:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./appldb-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASS}
+    networks:
+      - shared_network

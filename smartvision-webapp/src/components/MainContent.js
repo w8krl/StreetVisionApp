@@ -1,5 +1,5 @@
-import React from 'react';
-import styled from 'styled-components';
+import React from "react";
+import styled from "styled-components";
 
 const MainContentContainer = styled.main`
   grid-area: main-content;
@@ -7,7 +7,7 @@ const MainContentContainer = styled.main`
   padding: 20px;
 `;
 
-const MainContent = () => {
+const MainContent = ({ content }) => {
   return (
     <MainContentContainer>
       <p>Welcome to the main content area!</p>
