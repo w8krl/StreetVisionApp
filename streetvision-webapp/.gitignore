@@ -41,7 +41,3 @@ visaauthdb-data/
 /wt.*
 
 web-app-applicant/node_modules/.bin/ansi-html
-smartvision-webapp/web-app-applicant/node_modules/.bin/detect
-
-/es-data/*
-es-data/_state/*
