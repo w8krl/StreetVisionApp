@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
-import { FaBars, FaTimes, FaCog } from "react-icons/fa";
+import {
+  FaBars,
+  FaTimes,
+  FaCog,
+  FaUsersCog,
+  FaSearch,
+  FaDatabase,
+  FaMapMarkedAlt,
+} from "react-icons/fa";
+import { PiSirenLight } from "react-icons/pi";
+import { SiStitcher } from "react-icons/si";
+import { GiCctvCamera } from "react-icons/gi";
 
 const fadeIn = keyframes`
   from {
@@ -94,9 +105,13 @@ const ToggleButton = styled.button`
 `;
 
 const apiMenuData = [
-  { id: 1, label: "Menu Option 1", icon: "faCog" },
-  { id: 2, label: "Menu Option 2", icon: "faCog" },
-  { id: 3, label: "Menu Option 3", icon: "faCog" },
+  { id: 1, label: "Search Cameras", Icon: FaSearch },
+  { id: 2, label: "Events Dashboard", Icon: PiSirenLight },
+  { id: 3, label: "Surveillance", Icon: GiCctvCamera },
+  { id: 4, label: "Rendering Jobs", Icon: SiStitcher },
+  { id: 5, label: "Video Requests", Icon: FaCog },
+  { id: 6, label: "Map View", Icon: FaMapMarkedAlt },
+  { id: 7, label: "Settings", Icon: FaCog },
 ];
 
 const MenuOptionIcon = styled.div`
@@ -117,13 +132,7 @@ const MenuOptionLabel = styled.span`
 `;
 
 const Menu = ({ onToggle, collapsed }) => {
-  const [menuOptions, setMenuOptions] = useState([]);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setMenuOptions(apiMenuData);
-    }, 500);
-  }, []);
+  const [menuOptions, setMenuOptions] = useState(apiMenuData);
 
   return (
     <MenuContainer $collapsed={collapsed}>
@@ -134,7 +143,8 @@ const Menu = ({ onToggle, collapsed }) => {
         {menuOptions.map((option, index) => (
           <Option key={option.id} $collapsed={collapsed} index={index}>
             <MenuOptionIcon>
-              <FaCog />
+              {/* Render the Icon component directly */}
+              <option.Icon />
             </MenuOptionIcon>
             <MenuOptionLabel $collapsed={collapsed}>
               {option.label}

@@ -1,15 +1,13 @@
-const workflowService = require("../services/workflowService");
-const ApplicationInstance = require("../models/ApplicationInstance");
-const { producer } = require("../kafkaProducer");
+const Camera = require("../models/cameraModel");
+// const { producer } = require("../kafkaProducer");
 
 exports.getCameras = async (req, res) => {
   try {
-    // const formId = req.params.id;
-    const cameras = await workflowService.fetchApplicationForm(formId);
-    res.json(applicationForm);
+    const cameras = await Camera.find();
+    res.json(cameras); // Sending JSON data
   } catch (error) {
-    console.error("Error in getApplicationForm:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Failed to fetch camera data", error);
+    res.status(500).json({ message: "Failed to fetch data" });
   }
 };
 

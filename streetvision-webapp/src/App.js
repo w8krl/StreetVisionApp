@@ -16,6 +16,7 @@ function App() {
         <Router>
           <Routes>
             <Route path="/SearchCams" element={<SearchCams />} />
+            {/* <Route path="/camer" element={<SearchCams />} /> */}
 
             {/* <Route path="/login" element={<Login />} /> */}
             {/* <Route path="/suggested-results" element={<SuggestedResults />} /> */}

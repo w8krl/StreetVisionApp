@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const applicationController = require("../controllers/applicationController");
+const cameraController = require("../controllers/cameraController");
 
-router.get("/forms/:id", applicationController.getApplicationForm);
+// router.get("/forms/:id", applicationController.getApplicationForm);
 
-router.post("/applications", applicationController.submitApplication);
+router.get("/cameras", cameraController.getCameras);
+// router.post("/applications", applicationController.submitApplication);
 
 module.exports = router;
