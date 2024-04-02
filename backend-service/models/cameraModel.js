@@ -24,4 +24,6 @@ const cameraSchema = new mongoose.Schema({
   },
 });
 
+cameraSchema.index({ geometry: "2dsphere" });
+
 module.exports = mongoose.model("Camera", cameraSchema);

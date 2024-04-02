@@ -1,54 +1,13 @@
-const Camera = require("../models/cameraModel");
+const Video = require("../models/videoModel");
 // const { producer } = require("../kafkaProducer");
 
-exports.getCameras = async (req, res) => {
+exports.getVideos = async (req, res) => {
   try {
-    const cameras = await Camera.find();
-    res.json(cameras); // Sending JSON data
+    const videos = await Video.find();
+    res.json(videos); // Sending JSON data
   } catch (error) {
     console.error("Failed to fetch camera data", error);
     res.status(500).json({ message: "Failed to fetch data" });
-  }
-};
-
-// Search cams by location
-exports.getCamerasNear = async (req, res) => {
-  let { longitude, latitude, radius } = req.query;
-  const maxDistance = radius ? parseInt(radius, 10) : 10000;
-
-  longitude = parseFloat(longitude);
-  latitude = parseFloat(latitude);
-
-  console.log(longitude, latitude, radius, maxDistance);
-
-  if (
-    isNaN(longitude) ||
-    isNaN(latitude) ||
-    longitude < -180 ||
-    longitude > 180 ||
-    latitude < -90 ||
-    latitude > 90
-  ) {
-    return res.status(400).send("Invalid longitude or latitude values.");
-  }
-
-  try {
-    const cameras = await Camera.find({
-      geometry: {
-        $nearSphere: {
-          $geometry: {
-            type: "Point",
-            coordinates: [longitude, latitude],
-          },
-          $maxDistance: maxDistance,
-        },
-      },
-    });
-
-    res.json(cameras);
-  } catch (error) {
-    console.error("Error fetching nearby cameras", error);
-    res.status(500).send("Error fetching nearby cameras");
   }
 };
 

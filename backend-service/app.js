@@ -3,7 +3,7 @@ const cors = require("cors");
 // const { connectProducer } = require("./kafkaProducer");
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: "*" }));
 
 const port = process.env.PORT || 9000;
 

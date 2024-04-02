@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import {
   FaBars,
   FaTimes,
   FaCog,
-  FaUsersCog,
   FaSearch,
-  FaDatabase,
   FaMapMarkedAlt,
 } from "react-icons/fa";
+
+import { BsFillPinMapFill } from "react-icons/bs";
 import { PiSirenLight } from "react-icons/pi";
 import { SiStitcher } from "react-icons/si";
 import { GiCctvCamera } from "react-icons/gi";
+import { useNavigate } from "react-router-dom";
 
 const fadeIn = keyframes`
   from {
@@ -105,13 +106,14 @@ const ToggleButton = styled.button`
 `;
 
 const apiMenuData = [
-  { id: 1, label: "Search Cameras", Icon: FaSearch },
-  { id: 2, label: "Events Dashboard", Icon: PiSirenLight },
-  { id: 3, label: "Surveillance", Icon: GiCctvCamera },
-  { id: 4, label: "Rendering Jobs", Icon: SiStitcher },
-  { id: 5, label: "Video Requests", Icon: FaCog },
-  { id: 6, label: "Map View", Icon: FaMapMarkedAlt },
-  { id: 7, label: "Settings", Icon: FaCog },
+  { id: 1, label: "Search Cameras", Icon: FaSearch, path: "/search-cameras" },
+  { id: 2, label: "Events Dashboard", Icon: PiSirenLight, path: "/events" },
+  { id: 3, label: "Surveillance", Icon: GiCctvCamera, path: "/surveillance" },
+  { id: 4, label: "Video Decoding", Icon: SiStitcher, path: "/decoding-jobs" },
+  // { id: 5, label: "Video Requests", Icon: FaCog, path: "/video-requests" },
+  { id: 6, label: "Map View", Icon: FaMapMarkedAlt, path: "/regions" },
+  { id: 7, label: "Settings", Icon: FaCog, path: "/settings" },
+  { id: 8, label: "Regions", Icon: BsFillPinMapFill, path: "/regions" },
 ];
 
 const MenuOptionIcon = styled.div`
@@ -133,6 +135,12 @@ const MenuOptionLabel = styled.span`
 
 const Menu = ({ onToggle, collapsed }) => {
   const [menuOptions, setMenuOptions] = useState(apiMenuData);
+  const navigate = useNavigate(); // Hook for navigation
+
+  // Function to handle menu option click
+  const handleMenuOptionClick = (path) => {
+    navigate(path); // Navigate to the clicked menu's path
+  };
 
   return (
     <MenuContainer $collapsed={collapsed}>
@@ -141,9 +149,13 @@ const Menu = ({ onToggle, collapsed }) => {
       </ToggleButton>
       <MenuOptions>
         {menuOptions.map((option, index) => (
-          <Option key={option.id} $collapsed={collapsed} index={index}>
+          <Option
+            key={option.id}
+            $collapsed={collapsed}
+            index={index}
+            onClick={() => handleMenuOptionClick(option.path)} // Add onClick handler
+          >
             <MenuOptionIcon>
-              {/* Render the Icon component directly */}
               <option.Icon />
             </MenuOptionIcon>
             <MenuOptionLabel $collapsed={collapsed}>
