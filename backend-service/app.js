@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
-// const { connectProducer } = require("./kafkaProducer");
+
+require("./kafkaConsumer");
 
 const app = express();
 app.use(cors({ origin: "*" }));
@@ -10,7 +11,7 @@ const port = process.env.PORT || 9000;
 const mongoose = require("mongoose");
 
 // Connect to Kafka Producer
-// connectProducer().then(() => console.log("Connected to Kafka Producer"));
+connectProducer().then(() => console.log("Connected to Kafka Producer"));
 
 // import routes
 const applicationRoutes = require("./routes/applicationRoutes");

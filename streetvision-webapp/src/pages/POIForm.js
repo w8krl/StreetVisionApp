@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Layout } from "../components";
 import { Form, Button, Row, Col } from "react-bootstrap";
 import { CiCircleInfo } from "react-icons/ci";
@@ -6,7 +6,19 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import MapView from "../components/MapView";
 
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCameras } from "../redux/features/cameras/cameraThunks";
+
 const POIForm = () => {
+  // get cams into rexud
+  // despatch reducer
+  const dispatch = useDispatch();
+  const camerasState = useSelector((state) => state.cameras.Cameras);
+
+  useEffect(() => {
+    dispatch(fetchCameras());
+  }, [dispatch]);
+
   const [formData, setFormData] = useState({
     fromDate: "",
     toDate: "",
@@ -96,6 +108,19 @@ const POIForm = () => {
     return date && new Date(date).getTime() <= new Date().getTime();
   };
 
+  const handleCameraSelect = (e) => {
+    const selectedCameras = Array.from(
+      e.target.selectedOptions,
+      (option) => option.value
+    );
+
+    // Update formData state
+    setFormData((prevState) => ({
+      ...prevState,
+      cameras: selectedCameras,
+    }));
+  };
+
   return (
     <Layout>
       <ToastContainer />
@@ -147,28 +172,6 @@ const POIForm = () => {
                 </Form.Control.Feedback>
               </Col>
             </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Location</Form.Label>
-              <Form.Control
-                type="text"
-                name="location"
-                placeholder="Enter location"
-                value={formData.location}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Primary Camera</Form.Label>
-              <Form.Control
-                type="text"
-                name="location"
-                placeholder="Enter location"
-                value={formData.location}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
 
             <Form.Group className="mb-3">
               <Form.Label>POI Description</Form.Label>
@@ -210,6 +213,36 @@ const POIForm = () => {
                 <option value="high">High</option>
               </Form.Select>
             </Form.Group>
+
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label>Search for Coverage</Form.Label>
+              <Col md={6}>
+                <Form.Control
+                  type="text"
+                  name="location"
+                  placeholder="Enter location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  required
+                />
+              </Col>
+              {/* <Form.Label>Primary Camera</Form.Label> */}
+              <Col md={6}>
+                <Form.Select
+                  name="cameras"
+                  value={formData.cameras}
+                  onChange={handleCameraSelect}
+                  multiple
+                  required
+                >
+                  {camerasState.map((camera) => (
+                    <option key={camera._id} value={camera._id}>
+                      {camera.location}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+            </Form.Group>
             <Button variant="primary" type="submit" disabled={isSubmitted}>
               {isSubmitted ? "POI Created" : "Submit"}
             </Button>
@@ -218,7 +251,7 @@ const POIForm = () => {
         <Col md={6}>
           <h2>Search Area</h2>
 
-          <MapView markers={markers} mapCenter={mapCenter} zoom={zoom} />
+          {/* <MapView markers={markers} mapCenter={mapCenter} zoom={zoom} /> */}
         </Col>
       </Row>
     </Layout>

@@ -1,6 +1,6 @@
 const workflowService = require("../services/workflowService");
 const ApplicationInstance = require("../models/ApplicationInstance");
-const { producer } = require("../kafkaProducer");
+// const { producer } = require("../kafkaProducer");
 
 exports.getCameras = async (req, res) => {
   try {

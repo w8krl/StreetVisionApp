@@ -9,10 +9,10 @@ const videoSchema = new mongoose.Schema({
   processed: Boolean,
   vid_location: String,
   duration: Number,
-  // camera: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: "Camera",
-  // },
+  camera: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Camera",
+  },
 });
 
 module.exports = mongoose.model("Video", videoSchema);
