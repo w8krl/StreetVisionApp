@@ -1,7 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 
-require("./kafkaConsumer");
+// Producer and consumer
+const { connectProducer } = require("./kafkaProducer");
+const { connectConsumer } = require("./kafkaConsumer");
 
 const app = express();
 app.use(cors({ origin: "*" }));
@@ -10,8 +12,14 @@ const port = process.env.PORT || 9000;
 
 const mongoose = require("mongoose");
 
-// Connect to Kafka Producer
+// Connect to Kafka Producer, Consumer
 connectProducer().then(() => console.log("Connected to Kafka Producer"));
+
+connectConsumer()
+  .then(() => console.log("Connected to Kafka Consumer"))
+  .catch((err) => {
+    console.error("Failed to connect Kafka consumer:", err);
+  });
 
 // import routes
 const applicationRoutes = require("./routes/applicationRoutes");
@@ -39,9 +47,18 @@ mongoose
 app.use(express.json());
 
 // Include routes
-// app.use("/api", visaWorkflowRoutes);
 app.use("/api", applicationRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+// Handle shutdown
+const shutdown = async () => {
+  console.log("Shutting down...");
+  await consumer.disconnect();
+  process.exit(0);
+};
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

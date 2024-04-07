@@ -67,6 +67,11 @@ exports.createJob = async (req, res) => {
       start_time: { $lte: toDate },
       end_time: { $gte: fromDate },
     });
+    if (relevantVideos.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "No videos found for the given time range" });
+    }
 
     const poiDocument = await POI.findById(poiId);
     if (!poiDocument) {
@@ -97,9 +102,11 @@ exports.createJob = async (req, res) => {
       radius,
       fromDate,
       toDate,
-      cameraIds: camsInRange.map((camera) => camera.cam_name.toString()),
-      videoIds: relevantVideos.map((video) => video.vid_location.toString()),
+      jobType: "video_analysis",
+      topN: 30,
+      videos: relevantVideos.map((video) => video.vid_location.toString()),
     };
+    // cameraIds: camsInRange.map((camera) => camera.cam_name.toString()),
 
     await publishMessage("video_processing_jobs", jobDetails)
       .then(() => console.log("Job details published to Kafka"))

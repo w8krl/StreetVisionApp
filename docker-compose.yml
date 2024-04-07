@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 networks:
   shared_network:
     name: shared_network
@@ -17,6 +17,7 @@ services:
     image: confluentinc/cp-kafka:latest
     depends_on:
       - zookeeper
+    restart: always
     ports:
       - "9092:9092"
     environment:
@@ -101,6 +102,20 @@ services:
     ports:
       - "9200:9200" # Expose Elasticsearch HTTP port
       - "9300:9300" # Expose Elasticsearch TCP port
+    networks:
+      - shared_network
+  video-service:
+    build:
+      context: ./video-service
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./video-service:/usr/src/app
+      - ./media-store:/usr/src/app/job-data
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKER_URL: "kafka:29092"
     networks:
       - shared_network
 

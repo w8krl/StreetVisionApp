@@ -35,6 +35,8 @@ const jobSchema = new mongoose.Schema(
         ref: "Video",
       },
     ],
+    status: String,
+    details: mongoose.Schema.Types.Mixed,
   },
   {
     timestamps: true, // Optionally include timestamp information for the job
