@@ -1,0 +1,43 @@
+# Node modules
+*/node_modules/
+
+# Environment files
+.env
+*.env.local
+
+# Docker volumes
+*/data/
+*/db-data/
+userdb-data
+
+# Build directories
+*/build/
+*/node_modules/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+jspm_packages/
+
+# IDE / Editor directories
+.idea/
+.vscode/
+*.swp
+
+# MongoDB data directory
+wfdb-data/
+appldb-data/
+branch-data/
+visaauthdb-data/
+
+# WiredTiger files (if they're not in the above directory)
+/WiredTiger*
+/wt.*
+
+web-app-applicant/node_modules/.bin/ansi-html

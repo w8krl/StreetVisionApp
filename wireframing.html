@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      .grid-item-header {
+        grid-area: header;
+        background-color: #000000;
+        color: white;
+        display: flex;
+        padding: 10px;
+      }
+
+      .grid-item-main {
+        grid-area: main;
+        background-color: #e0e0e0;
+      }
+
+      .grid-item-footer {
+        grid-area: footer;
+      }
+
+      .grid-item-container {
+        height: 100vh;
+        width: 100vw;
+        display: grid;
+        grid-template-areas:
+          "header header header header header header"
+          "menu main main main main main"
+          "menu main main main main main";
+        grid-template-rows: 10% 45% 45%;
+        grid-template-columns: 10% 90%;
+
+        background-color: #2196f3;
+      }
+
+      .title {
+        font-family: poppins;
+        font-size: 2.2rem;
+      }
+
+      /* header contents */
+
+      .sec-banner {
+        margin-left: auto;
+      }
+
+      .sec-banner p {
+        margin: 0;
+        padding: 0;
+        font-size: 0.6rem;
+      }
+
+      /* menu */
+      .grid-item-menu {
+        grid-area: menu;
+        transition: max-height 0.3s ease; /* Add transition for smooth animation */
+        background: rgb(49, 139, 195);
+        background: linear-gradient(
+          100deg,
+          rgba(49, 139, 195, 1) 0%,
+          rgba(93, 201, 205, 1) 35%
+        );
+        display: flex;
+        flex-direction: column;
+        gap: 5%;
+        overflow: visible;
+        z-index: 1;
+      }
+
+      .grid-item-menu.collapsed .label {
+        display: none;
+        transition: 0.3s;
+      }
+      .grid-item-menu.collapsed i {
+        font-size: 1.2rem;
+        transition: 0.3s;
+      }
+
+      .menu-options {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        text-transform: uppercase;
+        color: white;
+      }
+
+      .menu-options .option {
+        padding: 10px;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 0.8rem;
+        background-color: rgba(0, 0, 0, 0.1);
+        transition: 0.2s;
+        text-align: center;
+      }
+
+      .menu-options .option:hover {
+        background-color: rgba(0, 0, 0, 0.2);
+        transition: 0.2s;
+      }
+
+      /* avatar */
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        justify-content: center;
+        transform: translateY(-50%);
+      }
+
+      .avatar-container {
+        border-radius: 50%;
+        height: 80px;
+        width: 80px;
+        background-color: white;
+      }
+
+      /* main */
+
+      .breadcrumb {
+        display: flex;
+        gap: 10px;
+        padding: 10px;
+        background-color: white;
+        box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+        color: #2196f3;
+        letter-spacing: 1px;
+      }
+
+      .container {
+        padding: 1rem;
+        background-color: white;
+        border-radius: 3px;
+        margin: 10px;
+      }
+
+      /* Headings */
+
+      h1 {
+        color: #1d1d1d;
+      }
+
+      .search-input {
+        padding: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 3px;
+        margin-bottom: 10px;
+      }
+
+      .search-box {
+        display: flex;
+        flex-direction: row;
+        border: solid 2px #e0e0e0;
+        border-radius: 3px;
+        height: 2rem;
+        align-items: center;
+        padding: 10px;
+        width: 40%;
+      }
+
+      .search-box:focus-within {
+        border: solid 2px #2196f3;
+      }
+
+      .search-box input {
+        border: none;
+        outline: none;
+      }
+
+      .box {
+        border-radius: 3px;
+        margin-bottom: 10px;
+        border: solid 1px #e0e0e0;
+      }
+
+      .box-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 1rem;
+      }
+
+      .box-content {
+        height: 100px;
+        padding: 3px;
+      }
+
+      .box-title {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 5px;
+        background: linear-gradient(
+          100deg,
+          rgba(49, 139, 195, 1) 0%,
+          rgba(93, 201, 205, 1) 35%
+        );
+        font-size: 1.4rem;
+        color: white;
+        border-bottom: solid 1px #e0e0e0;
+      }
+
+      .box-footer {
+        border-top: solid 1px #e0e0e0;
+        padding: 3px;
+      }
+
+      /* buttons / icons */
+
+      .layout-options {
+        margin-bottom: 10px;
+        display: inline;
+        border: solid 1px #e0e0e0;
+        padding: 3px;
+        border-radius: 3px;
+      }
+
+      .layout-options i {
+        padding: 5px;
+        color: grey;
+        cursor: pointer;
+      }
+
+      .layout-options .selected {
+        color: #2196f3;
+      }
+
+      .btn-primary {
+        background-color: #2196f3;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 0.8rem;
+        border-radius: 3px;
+        cursor: pointer;
+        margin-bottom: 10px;
+      }
+
+      .btn-primary[disabled] {
+        background-color: #e0e0e0;
+        color: #9e9e9e;
+      }
+
+      .cam-placeholder {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        font-size: 5rem;
+        color: lightgrey;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grid-item-container">
+      <div class="grid-item grid-item-header">
+        <div class="title">StreetVision</div>
+        <div class="sec-banner">
+          <p>Logged in as:</p>
+          <p>Last Login: 2021-03-01 12:00:00</p>
+        </div>
+      </div>
+
+      <!-- menu  -->
+      <div class="grid-item grid-item-menu" id="menu">
+        <button id="collapseButton">Collapse</button>
+        <!-- user info -->
+        <div class="user-info">
+          <div class="avatar-container"></div>
+        </div>
+
+        <div class="menu-options">
+          <div class="option">
+            <span class="label"> Menu Option </span><i class="fas fa-cog"></i>
+          </div>
+          <div class="option">
+            <span class="label"> Menu Option </span><i class="fas fa-cog"></i>
+          </div>
+          <div class="option">
+            <span class="label"> Menu Option </span><i class="fas fa-cog"></i>
+          </div>
+          <div class="option">
+            <span class="label"> Menu Option </span><i class="fas fa-cog"></i>
+          </div>
+          <div class="option">
+            <span class="label"> Menu Option </span><i class="fas fa-cog"></i>
+          </div>
+          <div class="option">
+            <span class="label"> Menu Option </span><i class="fas fa-cog"></i>
+          </div>
+        </div>
+
+        <i class="fas fa-bars"></i>
+      </div>
+
+      <div class="grid-item grid-item-main">
+        <div class="breadcrumb">
+          <span>Item > </span>
+          <span>Item > </span>
+          <span>Item > </span>
+          <span>Item </span>
+        </div>
+        <div class="container">
+          <h1>Camera Selection</h1>
+
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search for cameras..." />
+          </div>
+          <p>
+            Select the cameras to monitor, once selected, click OK and the feeds
+            will be displayed. You can save and edit your views.
+          </p>
+
+          <button type="button" class="btn-primary" disabled>
+            Cameras Selected (<span id="cam-count">0</span>)
+          </button>
+
+          <div class="layout-options">
+            <i class="fas fa-th selected" title="Grid view"></i>
+            <i class="fas fa-th-list" title="List view"></i>
+          </div>
+          <div class="box-grid">
+            <div class="box">
+              <div class="box-title">
+                <span>Camera A</span>
+                <div class="tools">
+                  <i
+                    class="fas fa-map-marker-alt location-icon"
+                    title="click to show location"
+                  ></i>
+                </div>
+              </div>
+              <div class="box-content">
+                <i class="fas fa-video cam-placeholder"></i>
+              </div>
+              <div class="box-footer">
+                <input type="checkbox" name="camA" id="camA" />
+                <label for="camA">Add Selection</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const menu = document.getElementById("menu");
+      const collapseButton = document.getElementById("collapseButton");
+      const gridContainer = document.querySelector(".grid-item-container");
+
+      const toggleMenu = () => {
+        if (menu.classList.contains("collapsed")) {
+          menu.classList.remove("collapsed");
+          gridContainer.style.gridTemplateColumns = "10% 90%";
+        } else {
+          menu.classList.add("collapsed");
+          gridContainer.style.gridTemplateColumns = "5% 95%";
+        }
+      };
+
+      collapseButton.addEventListener("click", toggleMenu);
+
+      collapseButton.addEventListener("click", toggleMenu);
+    </script>
+  </body>
+</html>
