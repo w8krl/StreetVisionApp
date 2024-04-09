@@ -114,6 +114,7 @@ const apiMenuData = [
   { id: 6, label: "Map View", Icon: FaMapMarkedAlt, path: "/regions" },
   { id: 7, label: "Settings", Icon: FaCog, path: "/settings" },
   { id: 8, label: "Regions", Icon: BsFillPinMapFill, path: "/regions" },
+  { id: 9, label: "POI List", Icon: BsFillPinMapFill, path: "/poi/list" },
 ];
 
 const MenuOptionIcon = styled.div`

@@ -91,6 +91,7 @@ exports.createJob = async (req, res) => {
         coordinates: [longitude, latitude],
       },
       videos: relevantVideos.map((video) => video._id),
+      status: "video_analysis_pending",
     });
 
     // Publish job to Kafka (for vid processing later on FIXME: check if vid paths vis)
@@ -120,5 +121,39 @@ exports.createJob = async (req, res) => {
     res
       .status(500)
       .json({ error: "Failed to create job", details: error.message });
+  }
+};
+
+// fetch job by ID
+exports.getJobById = async (req, res) => {
+  try {
+    const jobId = req.params.jobId;
+    const job = await Job.findById(jobId);
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    const updatedClipResults = job.details.clip_results.map((clip) => {
+      return {
+        ...clip,
+        // remove . prefix
+        inference: `http://localhost:9000/${clip.inference.replace(",", "")}`,
+        orig_img: `http://localhost:9000/${clip.orig_img.replace(",", "")}`,
+      };
+    });
+
+    const updatedJob = {
+      ...job._doc,
+      details: {
+        ...job.details,
+        clip_results: updatedClipResults,
+      },
+    };
+
+    res.json(updatedJob);
+  } catch (error) {
+    console.error("Error fetching job:", error);
+    res.status(500).json({ message: "Error fetching job" });
   }
 };

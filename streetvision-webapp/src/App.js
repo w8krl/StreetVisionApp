@@ -10,6 +10,8 @@ import Decoding from "./pages/Decoding";
 import SurvResults from "./pages/SurvResults";
 import Regions from "./pages/Regions";
 import POIForm from "./pages/POIForm";
+import POIList from "./pages/POIList";
+import JobReview from "./pages/JobReview";
 import POIStatus from "./components/POIStatus";
 import { VisaProvider } from "./components/visa/VisaContext"; // Update import path if necessary
 
@@ -26,6 +28,8 @@ function App() {
             <Route path="/events" element={<Events />} />
             <Route path="/events/new-event" element={<POIForm />} />
             <Route path="/poi" element={<POIStatus />} />
+            <Route path="/poi/list" element={<POIList />} />
+            <Route path="/poi/job-review" element={<JobReview />} />
             <Route
               path="/events/surveillance-report"
               element={<SurvResults />}

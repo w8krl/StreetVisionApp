@@ -7,6 +7,7 @@ from ultralytics import YOLO
 from tqdm.auto import tqdm
 from PIL import Image
 import json
+import datetime
 
 
 """
@@ -32,7 +33,7 @@ class StreetVisionV5:
         self.yoloModel = YOLO(yoloWeights)
         self.batchSize = clipBatchSize
         
-        self.JOB_DATA_PATH = '/usr/src/app/job-data'
+        self.JOB_DATA_PATH = './media-store/job-data'
 
         self.videoPaths = videoPaths
 
@@ -60,10 +61,13 @@ class StreetVisionV5:
         self.frameLabels = []
         self.frameNumbers = []
         self.detections = 0
+        self.bboxes = []
 
         # status stuff
         self.jobStatus = None
 
+        self.start_time = datetime.datetime.now().isoformat()
+        self.end_time = None
 
     def setJobId(self, jobId):
         self.jobId = jobId
@@ -92,8 +96,11 @@ class StreetVisionV5:
             "status": self.jobStatus,
             "job_id": self.jobId,
             "video_stats": self.vidStats,
-            "clip_results": self.clipResults
+            "clip_results": self.clipResults,
+            "start_time": self.start_time,
+            "end_time": self.end_time
         }
+
 
     def preValidation(self):
         
@@ -116,6 +123,9 @@ class StreetVisionV5:
 
         # start job
         self.processVideos()
+        self.end_time = datetime.datetime.now().isoformat()
+
+
     
     def validateMedia(self):
         # Pre validation checks
@@ -140,6 +150,7 @@ class StreetVisionV5:
         self.jobFolder = os.path.join(self.JOB_DATA_PATH, str(self.jobId))
         os.makedirs(self.jobFolder, exist_ok=True)
         return
+    
 
     def processVideos(self):
         
@@ -152,9 +163,10 @@ class StreetVisionV5:
             newPos = len(self.personCrops) - startPos # post yolo frames position (i.e. new data for this vid)
 
 
-            # If new detections are present in next vid run clip
+            # If new detections are present in next vid run CLIP
             if newPos > 0:
-                
+                print("Running CLIP on detected persons")
+
                 # get img embeddings
                 imgEmbeddings = self.getImgEmbeddings(self.personCrops[-startPos:])
                 inputs = self.tokenizer(self.searchPrompt, return_tensors="pt").to(self.device)
@@ -163,16 +175,36 @@ class StreetVisionV5:
                 imgEmbeddings = imgEmbeddings.T / np.linalg.norm(imgEmbeddings, axis=1)
                 scores = np.dot(textEmb, imgEmbeddings)[0]
 
+                print(f"Saving {self.topN} inference results for video {video}")
                 topIndices = np.argsort(-scores)[:self.topN]
+
+                vid = cv2.VideoCapture(video) # open video to get frames of top N, major refactor required.
+
                 for i, idx in enumerate(topIndices):
+                    # Save cropped images
                     framePath = os.path.join(self.jobFolder, f"frame_{self.frameNumbers[idx]}_{self.frameLabels[idx]}.png")
                     self.personCrops[idx].save(framePath)
+
+                    # Reopen Draw bounding boxes on originals (top 30 only)
+                    vid.set(cv2.CAP_PROP_POS_FRAMES, self.frameNumbers[idx])
+                    _, frame = vid.read()
+                    bbox = self.bboxes[idx] 
+                    cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 255, 0), 2)
+                    framePathWithBbox = os.path.join(self.jobFolder, f"frame_{self.frameNumbers[idx]}_{self.frameLabels[idx]}_orig_bbox.png")
+                    cv2.imwrite(framePathWithBbox,frame)
+
+                    # Update results
                     self.clipResults.append({
                         "inference": framePath,
+                        "orig_img": framePathWithBbox,
                         "score": float(scores[idx]),
                         "frame_number": self.frameNumbers[idx],
                         "video": video
                     })
+
+                vid.release()
+
+                
                     
             else:
                 print(f"No persons detected in {video}")
@@ -235,6 +267,7 @@ class StreetVisionV5:
                         x1, y1, x2, y2 = box
                         img = frame[y1:y2, x1:x2]
                         croppedImg = Image.fromarray(img)
+                        self.bboxes.append(box)
                         self.personCrops.append(croppedImg) #change to crops, also need to add orig_img to show crop.
                         self.frameLabels.append(f"person_{i}")
                         self.frameNumbers.append(fc)

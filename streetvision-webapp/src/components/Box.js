@@ -5,6 +5,7 @@ const BoxContainer = styled.div`
   border-radius: 3px;
   margin-bottom: 10px;
   border: solid 1px #e0e0e0;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 `;
 
 const BoxTitle = styled.div`
@@ -16,8 +17,12 @@ const BoxTitle = styled.div`
 
 const BoxContent = styled.div`
   margin-bottom: 10px;
-  height: 100px;
+  height: 250px;
   padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 `;
 
 const BoxFooter = styled.div`

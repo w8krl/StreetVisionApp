@@ -47,3 +47,4 @@ smartvision-webapp/web-app-applicant/node_modules/.bin/detect
 es-data/_state/*
 
 /media-store
+/video-service/media-store

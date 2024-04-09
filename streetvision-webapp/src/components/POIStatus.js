@@ -1,10 +1,9 @@
 import React, { useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Layout } from ".";
-
-// icons
-import { TbProgress } from "react-icons/tb";
-import { CiCircleCheck } from "react-icons/ci";
+import Badge from "react-bootstrap/Badge";
+import Button from "react-bootstrap/Button";
+import { GrView } from "react-icons/gr";
 
 import {
   DatatableWrapper,
@@ -19,40 +18,59 @@ import { Col, Row, Table } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPois } from "../redux/features/poi/poiThunks";
 
-// Update headers to match video data fields
+// // Update headers to match video data fields
 const headers = [
-  { prop: "camera_name", title: "Camera Name", isFilterable: true },
-  { prop: "start_time", title: "Start Time", isFilterable: true },
-  { prop: "end_time", title: "End Time", isFilterable: true },
-  { prop: "duration", title: "Duration (minutes)" },
-  { prop: "frame_rate", title: "Frame Rate" },
-  { prop: "processed", title: "Processed" },
+  { prop: "caseNumber", title: "Case Number", isFilterable: true },
+  { prop: "description", title: "Description", isFilterable: true },
+  { prop: "location", title: "Location", isFilterable: true },
+  { prop: "severity", title: "Severity", isFilterable: true },
+  { prop: "jobs", title: "Active Surveillance Jobs", isFilterable: true },
+  { prop: "view", title: "Details", isFilterable: true },
 ];
 
 const POIStatus = () => {
-  // Dispatch reducer
+  //   // Dispatch reducer
   const dispatch = useDispatch();
-  const poiState = useSelector((state) => state.pois.pois); // Updated for videos
+  const poiState = useSelector((state) => state.pois.Pois); // Updated for videos
 
   useEffect(() => {
     dispatch(fetchPois());
   }, [dispatch]);
 
   // Map the data from mongo to UI format for videos
-  const videosForTable = poiState.map((video) => ({
-    camera_name: video.camera_name,
-    start_time: video.start_time,
-    end_time: video.end_time,
-    duration: video.duration,
-    frame_rate: video.frame_rate,
-    processed: video.processed ? "Yes" : "No",
+  const poisForTable = poiState.map((poi) => ({
+    key: poi._id,
+    caseNumber: poi.caseNumber,
+    description: poi.description,
+    location: poi.location,
+    severity: poi.severity,
+    // createdAt: new Date(poi.createdAt).toLocaleString(),
+    jobs: poi.jobs.length,
+    running: poi.jobs.filter((job) => job.status === "video_analysis_pending")
+      .length,
+    updatedAt: new Date(poi.updatedAt).toLocaleString(),
   }));
+
+  console.dir(poiState);
+
+  const getSeverityBadgeVariant = (severity) => {
+    switch (severity) {
+      case "high":
+        return "danger"; // Red
+      case "medium":
+        return "warning"; // Yellow
+      case "low":
+        return "success"; // Green
+      default:
+        return "secondary"; // Grey, for undefined or other severities
+    }
+  };
 
   return (
     <Layout>
-      <h1>Video Decoding</h1>
+      <h1>POI Surveillance Jobs</h1>
       <DatatableWrapper
-        body={videosForTable}
+        body={poisForTable}
         headers={headers}
         paginationOptionsProps={{
           initialState: {
@@ -84,18 +102,32 @@ const POIStatus = () => {
         <Table striped bordered hover>
           <TableHeader />
           <TableBody>
-            {videosForTable.map((video) => (
-              <tr key={video.camera_name}>
-                <td>{video.camera_name}</td>
-                <td>{video.start_time}</td>
-                <td>{video.end_time}</td>
-                <td>{video.duration}</td>
-                <td>{video.frame_rate}</td>
+            {poisForTable.map((poi) => (
+              <tr key={poi.key}>
+                <td>{poi.caseNumber}</td>
                 <td>
-                  {!video.processed ? (
-                    <TbProgress color="red" />
-                  ) : (
-                    <CiCircleCheck color="green" />
+                  <i>"{poi.description}"</i>
+                </td>
+                <td>{poi.location}</td>
+                <td>
+                  <Badge bg={getSeverityBadgeVariant(poi.severity)}>
+                    {poi.severity}
+                  </Badge>
+                </td>
+                <td>
+                  {poi.jobs}
+                  {poi.running > 0 && (
+                    <Badge style={{ marginLeft: "8px" }} bg="primary">
+                      {poi.running} in Progress
+                    </Badge>
+                  )}
+                </td>
+                <td>
+                  {poi.jobs > 0 && (
+                    <Button size="sm">
+                      {" View "}
+                      <GrView />{" "}
+                    </Button>
                   )}
                 </td>
               </tr>

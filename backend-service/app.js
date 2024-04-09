@@ -7,6 +7,7 @@ const { connectConsumer } = require("./kafkaConsumer");
 
 const app = express();
 app.use(cors({ origin: "*" }));
+app.use("/media-store", express.static("/media-store"));
 
 const port = process.env.PORT || 9000;
 

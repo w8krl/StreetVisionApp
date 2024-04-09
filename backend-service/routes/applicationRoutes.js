@@ -15,6 +15,13 @@ router.get("/camerasNear", cameraController.getCamerasNear);
 router.get("/videos", videoController.getVideos);
 router.post("/createPoi", poiController.createPOI);
 router.get("/getPoiStatus", poiController.getPOIs);
+router.get("/poi-job-summary", poiController.getPOIJobSummary);
+
+// job by id (for review)
+router.get("/jobs/id/:jobId", jobController.getJobById);
+
+// list of all pois
+router.get("/poi-job-summary", poiController.getPOIJobSummary);
 // router.post("/applications", applicationController.submitApplication);
 
 // Create surveillance job

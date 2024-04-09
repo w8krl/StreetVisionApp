@@ -7,7 +7,8 @@ from StreetVisionV5 import StreetVisionV5
 
 KAFKA_TOPIC = 'video_processing_jobs'
 KAFKA_STATUS_TOPIC = 'video_processing_status'
-KAFKA_BROKERS = 'kafka:29092'
+# KAFKA_BROKERS = 'kafka:29092'
+KAFKA_BROKERS = 'localhost:9092'
 
 def create_producer(attempts=5, wait=5):
     while attempts > 0:
