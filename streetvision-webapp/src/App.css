@@ -37,3 +37,7 @@
     transform: rotate(360deg);
   }
 }
+
+.modal-header {
+  background-color: black;
+}

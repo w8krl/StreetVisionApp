@@ -12,8 +12,9 @@ import Regions from "./pages/Regions";
 import POIForm from "./pages/POIForm";
 import POIList from "./pages/POIList";
 import JobReview from "./pages/JobReview";
-import POIStatus from "./components/POIStatus";
+import POIStatus from "./pages/POIStatus";
 import { VisaProvider } from "./components/visa/VisaContext"; // Update import path if necessary
+import "./style.css";
 
 function App() {
   const isLoggedIn = /* logic to check if user is logged in */ false;
@@ -27,9 +28,9 @@ function App() {
             <Route path="/search-cameras" element={<SearchCams />} />
             <Route path="/events" element={<Events />} />
             <Route path="/events/new-event" element={<POIForm />} />
-            <Route path="/poi" element={<POIStatus />} />
+            <Route path="/jobs" element={<POIStatus />} />
             <Route path="/poi/list" element={<POIList />} />
-            <Route path="/poi/job-review" element={<JobReview />} />
+            {/* <Route path="/jobs" element={<JobReview />} /> */}
             <Route
               path="/events/surveillance-report"
               element={<SurvResults />}

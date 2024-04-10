@@ -68,6 +68,7 @@ class StreetVisionV5:
 
         self.start_time = datetime.datetime.now().isoformat()
         self.end_time = None
+        
 
     def setJobId(self, jobId):
         self.jobId = jobId
@@ -90,6 +91,8 @@ class StreetVisionV5:
         return
     
     def resultsToDict(self):
+        """
+        Returns results as a dictionary"""
         return {
             "total_frames_processed": self.totalFramesProcessed,
             "total_persons_detected": self.totalPersonsDetected,
@@ -153,7 +156,10 @@ class StreetVisionV5:
     
 
     def processVideos(self):
-        
+        """
+        Main method to iterate videos, call yolo and clip and save results
+        outputs: saves cropped images, vid trim, bbox results in job folder
+        """
         self.jobStatus = "Started"
         
         for video in self.videoPaths:

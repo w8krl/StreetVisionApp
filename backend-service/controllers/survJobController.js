@@ -125,26 +125,77 @@ exports.createJob = async (req, res) => {
 };
 
 // fetch job by ID
+// exports.getJobById = async (req, res) => {
+//   try {
+//     const jobId = req.params.jobId;
+//     const job = await Job.findById(jobId);
+
+//     if (!job) {
+//       return res.status(404).json({ message: "Job not found" });
+//     }
+
+//     const updatedClipResults = job.details.clip_results.map((clip) => {
+//       return {
+//         ...clip,
+//         // remove . prefix
+//         inference: `http://localhost:9000/${clip.inference.replace(",", "")}`,
+//         orig_img: `http://localhost:9000/${clip.orig_img.replace(",", "")}`,
+//       };
+//     });
+
+//     const updatedJob = {
+//       ...job._doc,
+//       details: {
+//         ...job.details,
+//         clip_results: updatedClipResults,
+//       },
+//     };
+
+//     res.json(updatedJob);
+//   } catch (error) {
+//     console.error("Error fetching job:", error);
+//     res.status(500).json({ message: "Error fetching job" });
+//   }
+// };
+
 exports.getJobById = async (req, res) => {
   try {
     const jobId = req.params.jobId;
-    const job = await Job.findById(jobId);
+    const job = await Job.findById(jobId).lean();
 
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
 
-    const updatedClipResults = job.details.clip_results.map((clip) => {
-      return {
-        ...clip,
-        // remove . prefix
-        inference: `http://localhost:9000/${clip.inference.replace(",", "")}`,
-        orig_img: `http://localhost:9000/${clip.orig_img.replace(",", "")}`,
-      };
-    });
+    const updatedClipResults = await Promise.all(
+      job.details.clip_results.map(async (clip) => {
+        const video = await Video.findOne({ vid_location: clip.video }).lean();
+        if (!video) {
+          return clip;
+        }
+
+        const camera = await Camera.findById(video.camera_id).lean();
+        if (!camera) {
+          return clip;
+        }
+
+        return {
+          ...clip,
+          inference: `http://localhost:9000/${clip.inference.replace(
+            "./",
+            ""
+          )}`,
+          orig_img: `http://localhost:9000/${clip.orig_img.replace("./", "")}`,
+          lat: camera.geometry.coordinates[1],
+          lng: camera.geometry.coordinates[0],
+          camera_name: camera.cam_name,
+          location: camera.location,
+        };
+      })
+    );
 
     const updatedJob = {
-      ...job._doc,
+      ...job,
       details: {
         ...job.details,
         clip_results: updatedClipResults,

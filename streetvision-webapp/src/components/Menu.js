@@ -108,13 +108,18 @@ const ToggleButton = styled.button`
 const apiMenuData = [
   { id: 1, label: "Search Cameras", Icon: FaSearch, path: "/search-cameras" },
   { id: 2, label: "Events Dashboard", Icon: PiSirenLight, path: "/events" },
-  { id: 3, label: "Surveillance", Icon: GiCctvCamera, path: "/surveillance" },
+  // { id: 3, label: "Surveillance", Icon: GiCctvCamera, path: "/surveillance" },
   { id: 4, label: "Video Decoding", Icon: SiStitcher, path: "/decoding-jobs" },
   // { id: 5, label: "Video Requests", Icon: FaCog, path: "/video-requests" },
   { id: 6, label: "Map View", Icon: FaMapMarkedAlt, path: "/regions" },
   { id: 7, label: "Settings", Icon: FaCog, path: "/settings" },
   { id: 8, label: "Regions", Icon: BsFillPinMapFill, path: "/regions" },
-  { id: 9, label: "POI List", Icon: BsFillPinMapFill, path: "/poi/list" },
+  {
+    id: 9,
+    label: "Surveillance Jobs",
+    Icon: BsFillPinMapFill,
+    path: "/jobs",
+  },
 ];
 
 const MenuOptionIcon = styled.div`
