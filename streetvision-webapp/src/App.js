@@ -30,7 +30,7 @@ function App() {
             <Route path="/events/new-event" element={<POIForm />} />
             <Route path="/jobs" element={<POIStatus />} />
             <Route path="/poi/list" element={<POIList />} />
-            {/* <Route path="/jobs" element={<JobReview />} /> */}
+            <Route path="/job/review/:jobId" element={<JobReview />} />
             <Route
               path="/events/surveillance-report"
               element={<SurvResults />}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { CamMap, Layout } from "../components";
-import { Form, Button, Row, Col } from "react-bootstrap";
+// import { CamMap, Layout } from "../components";
+import { Form, Button, Row, Col, Alert } from "react-bootstrap";
 import { CiCircleInfo } from "react-icons/ci";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -9,12 +9,12 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCameras } from "../redux/features/cameras/cameraThunks";
 
-const POIFormModal = () => {
+const POIFormModal = ({ onFormSuccess }) => {
   // get cams into rexud
   // despatch reducer
   const dispatch = useDispatch();
-  const camerasState = useSelector((state) => state.cameras.Cameras);
-  const [clickedLocation, setClickedLocation] = useState(null);
+  //   const camerasState = useSelector((state) => state.cameras.Cameras);
+  //   const [clickedLocation, setClickedLocation] = useState(null);
 
   useEffect(() => {
     dispatch(fetchCameras());
@@ -23,16 +23,16 @@ const POIFormModal = () => {
   const [formData, setFormData] = useState({
     fromDate: "",
     toDate: "",
-    location: "",
+    // location: "",
     description: "",
     caseNumber: "",
     severity: "",
   });
 
-  const handleLocationSelect = (latlng) => {
-    setClickedLocation(latlng);
-    console.log("Location selected", latlng);
-  };
+  //   const handleLocationSelect = (latlng) => {
+  //     setClickedLocation(latlng);
+  //     console.log("Location selected", latlng);
+  //   };
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const todayDate = new Date().toISOString().slice(0, 16);
@@ -48,19 +48,11 @@ const POIFormModal = () => {
   };
 
   const validateForm = () => {
-    const { fromDate, toDate, location, description, caseNumber, severity } =
-      formData;
+    const { fromDate, toDate, description, caseNumber } = formData;
     let isValid = true;
     let errorMessage = "";
 
-    if (
-      !fromDate ||
-      !toDate ||
-      !location ||
-      !description ||
-      !caseNumber ||
-      !severity
-    ) {
+    if (!fromDate || !toDate || !description || !caseNumber) {
       errorMessage = "All fields are required.";
       isValid = false;
     } else if (description.length < 10) {
@@ -104,7 +96,9 @@ const POIFormModal = () => {
 
       await response.json();
       setIsSubmitted(true);
-      toast.success("POI created successfully!");
+      //   toast.success("POI created successfully!");
+
+      if (onFormSuccess) onFormSuccess(); //close modal callback prop
     } catch (error) {
       toast.error("Error submitting form");
     }
@@ -112,19 +106,6 @@ const POIFormModal = () => {
 
   const dateValidation = (date) => {
     return date && new Date(date).getTime() <= new Date().getTime();
-  };
-
-  const handleCameraSelect = (e) => {
-    const selectedCameras = Array.from(
-      e.target.selectedOptions,
-      (option) => option.value
-    );
-
-    // Update formData state
-    setFormData((prevState) => ({
-      ...prevState,
-      cameras: selectedCameras,
-    }));
   };
 
   return (
@@ -187,7 +168,7 @@ const POIFormModal = () => {
         </Form.Group>
 
         <Form.Group className="mb-3" as={Row}>
-          <Col md={6}>
+          <Col md={12}>
             <Form.Label>Case Number</Form.Label>
             <Form.Control
               type="text"
@@ -199,7 +180,7 @@ const POIFormModal = () => {
             />
           </Col>
           <Col md={6}>
-            <Form.Label>Severity</Form.Label>
+            <Form.Label>Priority</Form.Label>
             <Form.Select
               name="severity"
               value={formData.severity}
@@ -207,7 +188,7 @@ const POIFormModal = () => {
               isValid={formData.severity}
               required
             >
-              <option value="">Select severity level</option>
+              <option value="">Select priority level</option>
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
@@ -215,38 +196,12 @@ const POIFormModal = () => {
           </Col>
         </Form.Group>
 
-        <Form.Group as={Row} className="mb-3">
-          <Col md={4}>
-            <Form.Label>Search for Coverage</Form.Label>
-            <Form.Control
-              type="text"
-              name="location"
-              placeholder="Enter location"
-              value={formData.location}
-              onChange={handleChange}
-              required
-            />
-            <Form.Label>Search for camera</Form.Label>
+        <Alert variant="info">
+          <CiCircleInfo /> Once the person of interested is created you can
+          create a surveillance job in the regions required. Note, more than one
+          surveillance job can be created for a single person of interest.
+        </Alert>
 
-            <Form.Select
-              name="cameras"
-              value={formData.cameras}
-              onChange={handleCameraSelect}
-              multiple
-              required
-            >
-              {camerasState.map((camera) => (
-                <option key={camera._id} value={camera._id}>
-                  {camera.location}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
-          {/* <Form.Label>Primary Camera</Form.Label> */}
-          <Col md={8}>
-            <CamMap onLocationSelect={handleLocationSelect} />
-          </Col>
-        </Form.Group>
         <Button variant="primary" type="submit" disabled={isSubmitted}>
           {isSubmitted ? "POI Created" : "Submit"}
         </Button>

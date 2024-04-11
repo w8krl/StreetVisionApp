@@ -12,3 +12,4 @@ export { default as POIFormModal } from "./POIFormModal";
 export { default as CamMap } from "./CamMap";
 
 export { default as JobModal } from "./JobModal";
+export { default as JobSelectModal } from "./JobSelectModal";

@@ -13,12 +13,17 @@ router.get("/camerasNear", cameraController.getCamerasNear);
 
 // videos
 router.get("/videos", videoController.getVideos);
+router.get("/streamVid", videoController.streamVideo);
+
 router.post("/createPoi", poiController.createPOI);
 router.get("/getPoiStatus", poiController.getPOIs);
 router.get("/poi-job-summary", poiController.getPOIJobSummary);
 
 // job by id (for review)
 router.get("/jobs/id/:jobId", jobController.getJobById);
+
+// for modal job status data
+router.get("/poi-job-details/id/:poiId", jobController.getJobDetailsByPoiId);
 
 // list of all pois
 router.get("/poi-job-summary", poiController.getPOIJobSummary);

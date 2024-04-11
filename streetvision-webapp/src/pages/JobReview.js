@@ -9,6 +9,7 @@ import MapView from "../components/MapView";
 import { renderToStaticMarkup } from "react-dom/server";
 import { GiCctvCamera } from "react-icons/gi";
 import L from "leaflet";
+import { useParams } from "react-router-dom";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -16,6 +17,7 @@ const JobReview = () => {
   const [jobData, setJobData] = useState(null);
   const [inferences, setInferences] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const { jobId } = useParams();
 
   const [currentInference, setCurrentInference] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(null);
@@ -39,7 +41,7 @@ const JobReview = () => {
   useEffect(() => {
     const fetchJobData = async () => {
       try {
-        const jobId = "6615695b91597ec1a311ccdd";
+        // const jobId = "6618022d7448db43fbf703a7";
         const response = await fetch(
           `http://localhost:9000/api/jobs/id/${jobId}`
         );

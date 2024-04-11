@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { CamMap, Layout } from "../components";
-import { Form, Button, Row, Col } from "react-bootstrap";
+import { Form, Button, Row, Col, Alert } from "react-bootstrap";
 import { CiCircleInfo } from "react-icons/ci";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -9,9 +9,11 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCameras } from "../redux/features/cameras/cameraThunks";
 
-const JobModal = () => {
+const JobModal = ({ poiId, onFormSuccess }) => {
   // get cams into rexud
   // despatch reducer
+
+  console.log(poiId);
   const dispatch = useDispatch();
   const camerasState = useSelector((state) => state.cameras.Cameras);
   const [clickedLocation, setClickedLocation] = useState(null);
@@ -21,17 +23,20 @@ const JobModal = () => {
   }, [dispatch]);
 
   const [formData, setFormData] = useState({
+    poiId: poiId,
+    latitude: "",
+    longitude: "",
+    radius: 10,
     fromDate: "",
     toDate: "",
-    location: "",
-    description: "",
-    caseNumber: "",
-    severity: "",
   });
 
   const handleLocationSelect = (latlng) => {
-    setClickedLocation(latlng);
-    console.log("Location selected", latlng);
+    setFormData((prevState) => ({
+      ...prevState,
+      latitude: latlng.lat.toFixed(6), // Ensure consistent format
+      longitude: latlng.lng.toFixed(6),
+    }));
   };
 
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -39,16 +44,16 @@ const JobModal = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    const updatedValue = name === "radius" ? parseFloat(value) : value;
 
-    // Update formData state
     setFormData((prevState) => ({
       ...prevState,
-      [name]: value,
+      [name]: updatedValue,
     }));
   };
 
   const validateForm = () => {
-    const { fromDate, toDate, location, description, caseNumber, severity } =
+    const { fromDate, toDate, latitude, longitude, severity, radius } =
       formData;
     let isValid = true;
     let errorMessage = "";
@@ -56,15 +61,12 @@ const JobModal = () => {
     if (
       !fromDate ||
       !toDate ||
-      !location ||
-      !description ||
-      !caseNumber ||
-      !severity
+      !latitude ||
+      !longitude ||
+      !severity ||
+      !radius
     ) {
       errorMessage = "All fields are required.";
-      isValid = false;
-    } else if (description.length < 10) {
-      errorMessage = "Description is too short.";
       isValid = false;
     } else if (
       new Date(fromDate).getTime() > new Date().getTime() ||
@@ -89,24 +91,41 @@ const JobModal = () => {
       return;
     }
 
+    // Prepare payload according to requirements
+    const payload = {
+      poiId: formData.poiId,
+      location: "",
+      coordinates: [
+        parseFloat(formData.longitude),
+        parseFloat(formData.latitude),
+      ],
+      radius: formData.radius,
+      fromDate: formData.fromDate,
+      toDate: formData.toDate,
+    };
+
     try {
-      const response = await fetch("http://localhost:9000/api/createPoi", {
+      const response = await fetch("http://localhost:9000/api/createSurvJob", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        const errorData = await response.json();
+        const errorMessage =
+          errorData.error || `Error! Status: ${response.status}`;
+        throw new Error(errorMessage);
       }
 
       await response.json();
       setIsSubmitted(true);
-      toast.success("POI created successfully!");
+      if (onFormSuccess) onFormSuccess();
+      // toast.success("Submission successful!");
     } catch (error) {
-      toast.error("Error submitting form");
+      toast.error("Error creating job: " + error.message);
     }
   };
 
@@ -130,10 +149,14 @@ const JobModal = () => {
   return (
     <>
       <ToastContainer />
-
-      <Form onSubmit={handleSubmit} noValidate>
-        <Form.Group as={Row} className="mb-3">
-          <Col md={6}>
+      <Alert size="sm" variant="info" dismissible>
+        <CiCircleInfo />
+        Interact by clicking on the map to set the lat/lon, or set it manually.
+      </Alert>
+      <Row>
+        <Col md={4}>
+          <h6>Set time period:</h6>
+          <Form.Group as={Row} className="mb-3">
             <Form.Label>From Date</Form.Label>
             <Form.Control
               type="datetime-local"
@@ -150,8 +173,6 @@ const JobModal = () => {
             <Form.Control.Feedback type="invalid">
               Must be a past date and before To Date.
             </Form.Control.Feedback>
-          </Col>
-          <Col md={6}>
             <Form.Label>To Date</Form.Label>
             <Form.Control
               type="datetime-local"
@@ -170,35 +191,9 @@ const JobModal = () => {
             <Form.Control.Feedback type="invalid">
               Must be a past date and after From Date.
             </Form.Control.Feedback>
-          </Col>
-        </Form.Group>
+          </Form.Group>
 
-        <Form.Group className="mb-3">
-          <Form.Label>POI Description</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={3}
-            name="description"
-            placeholder="Describe the person of interest using free text i.e. male with black shoes and red shirt holding a bag."
-            value={formData.description}
-            onChange={handleChange}
-            required
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3" as={Row}>
-          <Col md={6}>
-            <Form.Label>Case Number</Form.Label>
-            <Form.Control
-              type="text"
-              name="caseNumber"
-              placeholder="Enter case number"
-              value={formData.caseNumber}
-              onChange={handleChange}
-              required
-            />
-          </Col>
-          <Col md={6}>
+          <Form.Group className="mb-3" as={Row}>
             <Form.Label>Priority</Form.Label>
             <Form.Select
               name="severity"
@@ -212,45 +207,48 @@ const JobModal = () => {
               <option value="medium">Medium</option>
               <option value="high">High</option>
             </Form.Select>
-          </Col>
-        </Form.Group>
+          </Form.Group>
+          <h6>Set Search Area:</h6>
 
-        <Form.Group as={Row} className="mb-3">
-          <Col md={4}>
-            <Form.Label>Search for Coverage</Form.Label>
-            <Form.Control
-              type="text"
-              name="location"
-              placeholder="Enter location"
-              value={formData.location}
-              onChange={handleChange}
-              required
-            />
-            <Form.Label>Search for camera</Form.Label>
+          <Form.Label>Latitude</Form.Label>
+          <Form.Control
+            type="text"
+            name="latitude"
+            placeholder="Enter latitude"
+            value={formData.latitude}
+            onChange={handleChange}
+            required
+          />
+          <Form.Label>Longitude</Form.Label>
+          <Form.Control
+            type="text"
+            name="longitude"
+            placeholder="Enter longitude"
+            value={formData.longitude}
+            onChange={handleChange}
+            required
+          />
 
-            <Form.Select
-              name="cameras"
-              value={formData.cameras}
-              onChange={handleCameraSelect}
-              multiple
-              required
-            >
-              {camerasState.map((camera) => (
-                <option key={camera._id} value={camera._id}>
-                  {camera.location}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
-          {/* <Form.Label>Primary Camera</Form.Label> */}
-          <Col md={8}>
-            <CamMap onLocationSelect={handleLocationSelect} />
-          </Col>
-        </Form.Group>
-        <Button variant="primary" type="submit" disabled={isSubmitted}>
-          {isSubmitted ? "POI Created" : "Submit"}
-        </Button>
-      </Form>
+          <Form.Label>Radius</Form.Label>
+          <Form.Control
+            type="number"
+            name="radius" // Ensure this matches the key in your formData state
+            placeholder="Enter search radius in meters"
+            value={formData.radius}
+            onChange={handleChange}
+            required
+          />
+        </Col>
+        <Col md={8}>
+          <CamMap onLocationSelect={handleLocationSelect} />
+        </Col>
+
+        <Form onSubmit={handleSubmit} noValidate>
+          <Button variant="primary" type="submit" disabled={isSubmitted}>
+            {isSubmitted ? "Job Created" : "Run Search"}
+          </Button>
+        </Form>
+      </Row>
     </>
   );
 };

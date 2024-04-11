@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:16-buster
 
 WORKDIR /usr/src/app
 
@@ -6,8 +6,11 @@ COPY package*.json ./
 
 RUN npm install
 
-COPY . ./
+RUN apt-get update && \
+    apt-get install -y ffmpeg
+
+COPY . .
 
 EXPOSE 9000
 
-CMD [ "npm", "start" ]
+CMD [ "node", "app.js" ]

@@ -18,6 +18,7 @@ const POI = require("../models/poiModel");
 // FIXME: consider adding ids to kaf msg
 
 exports.createJob = async (req, res) => {
+  console.log(req.body);
   try {
     const { poiId, location, radius, fromDate, toDate, coordinates } = req.body;
 
@@ -206,5 +207,25 @@ exports.getJobById = async (req, res) => {
   } catch (error) {
     console.error("Error fetching job:", error);
     res.status(500).json({ message: "Error fetching job" });
+  }
+};
+
+exports.getJobDetailsByPoiId = async (req, res) => {
+  const { poiId } = req.params;
+
+  try {
+    const poi = await POI.findById(poiId);
+    if (!poi) {
+      return res.status(404).json({ error: "POI not found" });
+    }
+
+    const jobs = await Job.find({ poi: poiId })
+      .populate("cameras", "location")
+      .populate("videos");
+
+    res.json(jobs);
+  } catch (error) {
+    console.error("Failed to fetch jobs", error);
+    res.status(500).json({ error: "Failed to fetch jobs" });
   }
 };

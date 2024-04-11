@@ -12,7 +12,7 @@ const poiSchema = new mongoose.Schema(
     },
     location: {
       type: String,
-      required: true,
+      required: false,
     },
     description: {
       type: String,
@@ -24,7 +24,7 @@ const poiSchema = new mongoose.Schema(
     },
     severity: {
       type: String,
-      required: true,
+      required: false,
       enum: ["low", "medium", "high"], // Only allow these values
     },
   },

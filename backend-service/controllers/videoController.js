@@ -1,4 +1,5 @@
 const Video = require("../models/videoModel");
+const { spawn } = require("child_process");
 // const { producer } = require("../kafkaProducer");
 
 exports.getVideos = async (req, res) => {
@@ -58,3 +59,45 @@ exports.getVideos = async (req, res) => {
 //     res.status(500).json({ error: error.message });
 //   }
 // };
+
+exports.streamVideo = (req, res) => {
+  const videoPath = "/media-store/upl/peoplewalking.mp4";
+  // const { videoPath, frameID } = req.query;
+  const frameID = 2790;
+  const FPS = 30; // Example frame rate; adjust this based on your video or retrieve dynamically
+
+  // Convert frameID to timestamp in seconds
+  const frameTimestamp = frameID / FPS;
+  const startTime = Math.max(0, frameTimestamp - 5); // Start 5 seconds before the frame timestamp
+  const duration = 10; // Duration to stream
+
+  // Set response headers
+  res.writeHead(200, {
+    "Content-Type": "video/mp4",
+    "Accept-Ranges": "bytes",
+  });
+
+  // ffmpeg command as before, using startTime and duration calculated above
+  const ffmpegProcess = spawn("ffmpeg", [
+    "-ss",
+    String(startTime),
+    "-t",
+    String(duration),
+    "-i",
+    videoPath,
+    "-f",
+    "mp4",
+    "-movflags",
+    "frag_keyframe+empty_moov",
+    "-vcodec",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-acodec",
+    "aac",
+    "-",
+  ]);
+
+  ffmpegProcess.stdout.pipe(res);
+  // Error handling remains the same as previously shown
+};
