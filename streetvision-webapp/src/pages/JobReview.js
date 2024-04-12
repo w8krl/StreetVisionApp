@@ -10,8 +10,68 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { GiCctvCamera } from "react-icons/gi";
 import L from "leaflet";
 import { useParams } from "react-router-dom";
-
+import { Carousel } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
+
+import "../MediaCarousel.css";
+
+const MediaCarousel = ({ inference }) => {
+  const ref = React.useRef(null);
+
+  const handlePrev = () => {
+    ref.current.prev();
+  };
+
+  const handleNext = () => {
+    ref.current.next();
+  };
+
+  return (
+    <div className="carousel-wrapper">
+      <Carousel ref={ref} interval={null} indicators={false} controls={false}>
+        <Carousel.Item>
+          <img
+            src={inference.orig_img}
+            alt="Original"
+            style={{
+              width: "100%",
+              height: "auto",
+            }}
+          />
+        </Carousel.Item>
+        <Carousel.Item>
+          <video
+            id={`video-${inference.frame_number}`}
+            width="100%"
+            controls
+            preload="none"
+            poster={inference.orig_img}
+          >
+            <source
+              src={`http://localhost:9000/api/stream/video/660a82b69e2fde77335089d0/${inference.frame_number}`}
+              type="video/mp4"
+            />
+            Your browser does not support the video tag.
+          </video>
+        </Carousel.Item>
+      </Carousel>
+      <Button
+        className="carousel-control-prev"
+        onClick={handlePrev}
+        aria-label="Previous"
+      >
+        {"<"}
+      </Button>
+      <Button
+        className="carousel-control-next"
+        onClick={handleNext}
+        aria-label="Next"
+      >
+        {">"}
+      </Button>
+    </div>
+  );
+};
 
 const JobReview = () => {
   const [jobData, setJobData] = useState(null);
@@ -131,7 +191,12 @@ const JobReview = () => {
     <Layout>
       <h2>Inference Verification </h2>
 
-      <Alert variant="info" onClose={() => setShow(false)} dismissible>
+      <Alert
+        className="bg-gov-blue"
+        variant="info"
+        onClose={() => setShow(false)}
+        dismissible
+      >
         <Alert.Heading>Info</Alert.Heading>
         <p>
           <CiCircleInfo height={4} />
@@ -168,14 +233,43 @@ const JobReview = () => {
               }
               content={
                 <div>
-                  <Image
+                  {/* <Image
                     src={inference.orig_img}
                     style={{
                       maxWidth: "100%",
                       height: "100%",
                       boxShadow: "0 0 5px rgba(0, 0, 0, 0.1)",
                     }}
-                  />
+                  /> */}
+                  <video
+                    id={`video-${inference.frame_number}`} // Ensure each video has a unique ID
+                    width="100%"
+                    preload="none"
+                    controls
+                    poster={inference.orig_img}
+                  >
+                    <source
+                      src={`http://localhost:9000/api/stream/video/660a82b69e2fde77335089d0/${inference.frame_number}`}
+                      type="video/mp4"
+                    />
+                    Your browser does not support the video tag.
+                  </video>
+                  {/* <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={(e) => {
+                      const video = document.getElementById(
+                        `video-${inference.frame_number}`
+                      );
+                      if (video.paused) {
+                        video.play();
+                      } else {
+                        video.pause();
+                      }
+                    }}
+                  >
+                    Play/Pause
+                  </Button> */}
                 </div>
               }
               footer={
@@ -197,9 +291,9 @@ const JobReview = () => {
       </Row>
 
       <Modal fullscreen show={showModal} onHide={handleCloseModal}>
-        <Modal.Header closeButton>
+        <Modal.Header className="modal-title-white" closeButton>
           <Modal.Title>
-            Inference Details -{" "}
+            Displaying Inference Details -{" "}
             {currentIndex !== null
               ? `${currentIndex + 1}/${inferences.length}`
               : "Loading..."}
@@ -223,7 +317,8 @@ const JobReview = () => {
                       Please review the image contents and approve or reject{" "}
                     </p>
 
-                    <Image src={inferences[currentIndex].orig_img} fluid />
+                    {/* <Image src={inferences[currentIndex].orig_img} fluid /> */}
+                    <MediaCarousel inference={inferences[currentIndex]} />
 
                     {/* Other details you want to show */}
                   </>
@@ -297,27 +392,25 @@ const JobReview = () => {
             </Col>
           </Row>
         </Modal.Body>
-        <Modal.Footer className="d-flex justify-content-between">
-          <div>
-            <Button
-              size="sm"
-              variant="outline-primary"
-              onClick={handlePrevInference}
-              style={{ marginRight: "5px" }}
-            >
-              Prev
-            </Button>
-            <Button
-              size="sm"
-              variant="outline-primary"
-              onClick={handleNextInference}
-            >
-              Next
-            </Button>
-            <p className="d-inline ml-2">
-              {/* Click to navigate between inferences. */}
-            </p>
-          </div>
+        <Modal.Footer className="d-flex justify-content-center">
+          <Button
+            size="sm"
+            variant="outline-primary"
+            onClick={handlePrevInference}
+            style={{ marginRight: "5px" }}
+          >
+            Prev
+          </Button>
+          <Button
+            size="sm"
+            variant="outline-primary"
+            onClick={handleNextInference}
+          >
+            Next
+          </Button>
+          <p className="d-inline ml-2">
+            {/* Click to navigate between inferences. */}
+          </p>
           {/* <Button variant="secondary" onClick={handleCloseModal}>
             Close
           </Button> */}

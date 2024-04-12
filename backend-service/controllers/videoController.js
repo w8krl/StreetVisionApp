@@ -60,44 +60,97 @@ exports.getVideos = async (req, res) => {
 //   }
 // };
 
-exports.streamVideo = (req, res) => {
-  const videoPath = "/media-store/upl/peoplewalking.mp4";
-  // const { videoPath, frameID } = req.query;
-  const frameID = 2790;
-  const FPS = 30; // Example frame rate; adjust this based on your video or retrieve dynamically
+exports.streamVideo = async (req, res) => {
+  try {
+    const { videoId, frameNumber } = req.params;
 
-  // Convert frameID to timestamp in seconds
-  const frameTimestamp = frameID / FPS;
-  const startTime = Math.max(0, frameTimestamp - 5); // Start 5 seconds before the frame timestamp
-  const duration = 10; // Duration to stream
+    // Retrieve video details from the database
+    const video = await Video.findById(videoId);
 
-  // Set response headers
-  res.writeHead(200, {
-    "Content-Type": "video/mp4",
-    "Accept-Ranges": "bytes",
-  });
+    if (!video) {
+      return res.status(404).send("Video not found");
+    }
 
-  // ffmpeg command as before, using startTime and duration calculated above
-  const ffmpegProcess = spawn("ffmpeg", [
-    "-ss",
-    String(startTime),
-    "-t",
-    String(duration),
-    "-i",
-    videoPath,
-    "-f",
-    "mp4",
-    "-movflags",
-    "frag_keyframe+empty_moov",
-    "-vcodec",
-    "libx264",
-    "-preset",
-    "veryfast",
-    "-acodec",
-    "aac",
-    "-",
-  ]);
+    const videoPath = video.vid_location.replace(".", "");
+    const FPS = video.frame_rate || 30;
 
-  ffmpegProcess.stdout.pipe(res);
-  // Error handling remains the same as previously shown
+    const frameTimestamp = frameNumber / FPS;
+    const startTime = Math.max(0, frameTimestamp - 5);
+    const duration = 10;
+
+    const stat = fs.statSync(videoPath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    let start, end;
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      start = parseInt(parts[0], 10);
+      end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    } else {
+      start = 0;
+      end = fileSize - 1;
+    }
+
+    const chunkSize = end - start + 1;
+    const contentLength =
+      start === 0 && end === fileSize - 1 ? fileSize : chunkSize;
+
+    const headers = {
+      "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": contentLength,
+      "Content-Type": "video/mp4",
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+    };
+
+    res.writeHead(range ? 206 : 200, headers);
+
+    // Create ffmpeg process adn stream the video
+    const ffmpegProcess = spawn("ffmpeg", [
+      "-ss",
+      String(startTime),
+      "-t",
+      String(duration),
+      "-i",
+      videoPath,
+      "-f",
+      "mp4",
+      "-movflags",
+      "frag_keyframe+empty_moov",
+      "-vcodec",
+      "libx264",
+      "-preset",
+      "veryfast",
+      "-acodec",
+      "aac",
+      "-",
+    ]);
+
+    ffmpegProcess.stdout.on("data", (chunk) => {
+      res.write(chunk);
+    });
+
+    ffmpegProcess.stdout.on("end", () => {
+      res.end();
+    });
+
+    ffmpegProcess.stderr.on("data", (data) => {
+      console.error(`ffmpeg stderr: ${data}`);
+    });
+
+    ffmpegProcess.on("error", (error) => {
+      console.error(`Error with ffmpeg: ${error}`);
+      res.end();
+    });
+
+    ffmpegProcess.on("exit", (code, signal) => {
+      console.log(`ffmpeg exited with code ${code} and signal ${signal}`);
+      res.end();
+    });
+  } catch (error) {
+    console.error("Server error:", error);
+    res.status(500).send("Server error");
+  }
 };

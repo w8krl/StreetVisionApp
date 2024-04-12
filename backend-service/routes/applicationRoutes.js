@@ -13,7 +13,7 @@ router.get("/camerasNear", cameraController.getCamerasNear);
 
 // videos
 router.get("/videos", videoController.getVideos);
-router.get("/streamVid", videoController.streamVideo);
+router.get("/stream/video/:videoId/:frameNumber", videoController.streamVideo);
 
 router.post("/createPoi", poiController.createPOI);
 router.get("/getPoiStatus", poiController.getPOIs);

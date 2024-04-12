@@ -37,11 +37,12 @@ const pulse = keyframes`
 const MenuContainer = styled.div`
   grid-area: menu;
   transition: max-width 0.3s ease-out, min-width 0.3s ease-out;
-  background: linear-gradient(
-    100deg,
-    rgba(49, 139, 195, 1) 0%,
-    rgba(93, 201, 205, 1) 35%
-  );
+  // background: linear-gradient(
+  //   100deg,
+  //   rgba(49, 139, 195, 1) 0%,
+  //   rgba(93, 201, 205, 1) 35%
+  // );
+  background: linear-gradient(89deg, rgb(0 48 94) 0%, #0e519d 67%);
   display: flex;
   flex-direction: column;
   gap: 5%;
@@ -90,7 +91,7 @@ const Option = styled.div`
 
   transition: background-color 0.3s ease;
   &:hover {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.3);
     trnasition: background-color 0.3s ease;
   }
 `;
@@ -98,7 +99,8 @@ const Option = styled.div`
 const ToggleButton = styled.button`
   background: none;
   border: none;
-  color: white;
+  color: black;
+  padding-top: 2rem;
   cursor: pointer;
   display: flex;
   align-items: center;
