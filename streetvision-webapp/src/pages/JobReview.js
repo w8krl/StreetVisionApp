@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Layout } from "../components";
 import { Button, Row, Col, Image, Badge, Modal } from "react-bootstrap";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Box from "../components/Box";
 import Alert from "react-bootstrap/Alert";
@@ -10,68 +11,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { GiCctvCamera } from "react-icons/gi";
 import L from "leaflet";
 import { useParams } from "react-router-dom";
-import { Carousel } from "react-bootstrap";
+import MediaCarousel from "../components/MediaCarousel";
 import "bootstrap/dist/css/bootstrap.min.css";
-
-import "../MediaCarousel.css";
-
-const MediaCarousel = ({ inference }) => {
-  const ref = React.useRef(null);
-
-  const handlePrev = () => {
-    ref.current.prev();
-  };
-
-  const handleNext = () => {
-    ref.current.next();
-  };
-
-  return (
-    <div className="carousel-wrapper">
-      <Carousel ref={ref} interval={null} indicators={false} controls={false}>
-        <Carousel.Item>
-          <img
-            src={inference.orig_img}
-            alt="Original"
-            style={{
-              width: "100%",
-              height: "auto",
-            }}
-          />
-        </Carousel.Item>
-        <Carousel.Item>
-          <video
-            id={`video-${inference.frame_number}`}
-            width="100%"
-            controls
-            preload="none"
-            poster={inference.orig_img}
-          >
-            <source
-              src={`http://localhost:9000/api/stream/video/660a82b69e2fde77335089d0/${inference.frame_number}`}
-              type="video/mp4"
-            />
-            Your browser does not support the video tag.
-          </video>
-        </Carousel.Item>
-      </Carousel>
-      <Button
-        className="carousel-control-prev"
-        onClick={handlePrev}
-        aria-label="Previous"
-      >
-        {"<"}
-      </Button>
-      <Button
-        className="carousel-control-next"
-        onClick={handleNext}
-        aria-label="Next"
-      >
-        {">"}
-      </Button>
-    </div>
-  );
-};
 
 const JobReview = () => {
   const [jobData, setJobData] = useState(null);
@@ -84,6 +25,12 @@ const JobReview = () => {
   const [markers, setMarkers] = useState([]);
   const [show, setShow] = useState(true);
   const [mapCenter, setMapCenter] = useState({});
+
+  const [approvedInferences, setApprovedInferences] = useState([]);
+  const [rejectedInferences, setRejectedInferences] = useState([]);
+  const [pendingInferences, setPendingInferences] = useState([]);
+
+  const [showDetails, setShowDetails] = useState(false);
 
   const createCustomIcon = () => {
     const svgMarkup = renderToStaticMarkup(
@@ -108,6 +55,18 @@ const JobReview = () => {
         const data = await response.json();
         setJobData(data);
 
+        // Setting up approval buckets (default is pending from streetvision )
+        const { clip_results } = data.details;
+        setApprovedInferences(
+          clip_results.filter((clip) => clip.status === "approved")
+        );
+        setRejectedInferences(
+          clip_results.filter((clip) => clip.status === "rejected")
+        );
+        setPendingInferences(
+          clip_results.filter((clip) => clip.status === "pending")
+        );
+
         if (data.geometry && data.geometry.coordinates) {
           const [lng, lat] = data.geometry.coordinates;
           setMapCenter({ lat, lng });
@@ -121,10 +80,11 @@ const JobReview = () => {
           }
         });
 
+        // for map
         const markers = Array.from(uniqueCoords.values()).map((clip) => ({
-          key: `${clip.lat},${clip.lng}`, // Use the coordinate pair as a unique key
+          key: `${clip.lat},${clip.lng}`,
           position: [clip.lat, clip.lng],
-          icon: createCustomIcon(), // Assuming this function does not depend on clip-specific data
+          icon: createCustomIcon(),
           popup: (
             <div>
               <h3>Location Data</h3>
@@ -140,7 +100,6 @@ const JobReview = () => {
               <p>
                 <b>To Date:</b> {new Date(data.toDate).toLocaleString()}
               </p>
-              {/* You might want to adjust what happens in setPrimary or its equivalent */}
               <Button size="sm">View Clip</Button>
             </div>
           ),
@@ -157,6 +116,8 @@ const JobReview = () => {
 
   useEffect(() => {
     if (jobData) {
+      console.log(jobData);
+
       const sortedInferences = jobData.details.clip_results.sort(
         (a, b) => b.score - a.score
       );
@@ -164,8 +125,50 @@ const JobReview = () => {
     }
   }, [jobData]);
 
-  const handleApproval = (index, approved) => {
-    console.log(`Inference ${index} approved: ${approved}`);
+  const handleDecision = async (index, decision) => {
+    const url = `http://localhost:9000/api/jobs/${jobId}/inferences/${index}`;
+    const options = {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ decision }),
+    };
+
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) throw new Error("Failed to update decision status");
+      const updatedInference = await response.json();
+
+      // Update the state of all inferences to reflect change
+      const updatedInferences = inferences.map((inf) =>
+        inf.frame_number === updatedInference.frame_number
+          ? { ...inf, status: decision }
+          : inf
+      );
+      setInferences(updatedInferences);
+
+      // Update the respective buckets for approved or rejected
+      if (decision === "approve") {
+        setApprovedInferences((prev) => [...prev, updatedInference]);
+        setPendingInferences((prev) =>
+          prev.filter(
+            (inf) => inf.frame_number !== updatedInference.frame_number
+          )
+        );
+        toast.success("Inference added to approved scope");
+      } else {
+        setRejectedInferences((prev) => [...prev, updatedInference]);
+        setPendingInferences((prev) =>
+          prev.filter(
+            (inf) => inf.frame_number !== updatedInference.frame_number
+          )
+        );
+        toast.error("Inference added to rejected scope");
+      }
+      handleNextInference();
+    } catch (error) {
+      console.error("Error updating decision status:", error);
+      toast.error("Failed to update inference status. Please try again.");
+    }
   };
 
   const handleShowModal = (index) => {
@@ -187,17 +190,10 @@ const JobReview = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % inferences.length);
   };
 
-  return (
-    <Layout>
-      <h2>Inference Verification </h2>
-
-      <Alert
-        className="bg-gov-blue"
-        variant="info"
-        onClose={() => setShow(false)}
-        dismissible
-      >
-        <Alert.Heading>Info</Alert.Heading>
+  const ShowJobDetails = () => {
+    return (
+      <>
+        <h2>Job Details</h2>
         <p>
           <CiCircleInfo height={4} />
           You have a total of{" "}
@@ -217,73 +213,128 @@ const JobReview = () => {
           </li>
           <li>Search Interval: 30 frames</li>
         </ul>
-      </Alert>
-      <p>
-        Total Images to Review:{" "}
-        {jobData ? jobData.details.clip_results.length : "Loading..."}
-      </p>
+      </>
+    );
+  };
+
+  return (
+    <Layout>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+
+      <h1>Identity Verification</h1>
+      <h6>
+        Inference Job ID: {jobId}{" "}
+        <span
+          style={{ color: "color(srgb 0.0458 0.3187 0.6166)" }}
+          onClick={() => setShowDetails(true)}
+        >
+          {" "}
+          - <CiCircleInfo></CiCircleInfo>View Details
+        </span>
+      </h6>
+      <Row>
+        <Col lg={12}>
+          <div className="d-flex align-items-center pb-2">
+            <p className="mb-0 margin-right-10">Pending Images:</p>
+            <Badge bg="warning" text="dark" className="margin-right-10">
+              {jobData ? pendingInferences.length : "Loading..."}
+            </Badge>
+            <p className="mb-0 margin-right-10">Approved Images:</p>
+            <Badge bg="success" text="light" className="margin-right-10">
+              {jobData ? approvedInferences.length : "Loading..."}
+            </Badge>
+            <p className="mb-0 margin-right-10">Rejected Images:</p>
+            <Badge bg="danger" text="light">
+              {jobData ? rejectedInferences.length : "Loading..."}
+            </Badge>
+          </div>
+          {approvedInferences.length > 0 && (
+            <Button
+              variant="primary"
+              style={{ borderRadius: "0" }} // Set width to "auto" or a specific value like "200px"
+              onClick={() => alert("Button clicked")}
+            >
+              Compose Final Video
+            </Button>
+          )}
+        </Col>
+      </Row>
+      <hr />
+
       <Row>
         {inferences.map((inference, index) => (
           <Col key={index} xs={12} md={6} lg={3} className="mb-3">
             <Box
+              style={{ backgroundColor: "black" }}
               title={
-                <Badge bg="secondary">
-                  Score: {inference.score.toFixed(2)}
-                </Badge>
+                <>
+                  <h5>{inference.camera_name.toUpperCase()}</h5>
+                  <Badge bg="secondary" className="mr-2">
+                    Score:{" "}
+                    {inference.score ? inference.score.toFixed(2) : "N/A"}
+                  </Badge>
+                  <Badge
+                    bg={
+                      inference.status === "approved"
+                        ? "success"
+                        : inference.status === "rejected"
+                        ? "danger"
+                        : inference.status === "pending"
+                        ? "warning"
+                        : "secondary"
+                    }
+                  >
+                    {inference.status.toUpperCase()}
+                  </Badge>
+                </>
               }
               content={
                 <div>
-                  {/* <Image
-                    src={inference.orig_img}
-                    style={{
-                      maxWidth: "100%",
-                      height: "100%",
-                      boxShadow: "0 0 5px rgba(0, 0, 0, 0.1)",
-                    }}
-                  /> */}
                   <video
-                    id={`video-${inference.frame_number}`} // Ensure each video has a unique ID
+                    id={`video-${inference.frame_number}`}
                     width="100%"
                     preload="none"
                     controls
                     poster={inference.orig_img}
                   >
+                    {/* <source
+                      src={`http://localhost:9000/api/stream/video/${inference.video
+                        .split("/")
+                        .pop()}/${inference.frame_number}`}
+                      type="video/mp4"
+                    /> */}
                     <source
                       src={`http://localhost:9000/api/stream/video/660a82b69e2fde77335089d0/${inference.frame_number}`}
                       type="video/mp4"
                     />
                     Your browser does not support the video tag.
                   </video>
-                  {/* <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={(e) => {
-                      const video = document.getElementById(
-                        `video-${inference.frame_number}`
-                      );
-                      if (video.paused) {
-                        video.play();
-                      } else {
-                        video.pause();
-                      }
-                    }}
-                  >
-                    Play/Pause
-                  </Button> */}
+                  <ul className="mb-0 list-none">
+                    <li>Loc:{inference.location}</li>
+                    <li>Frame: {inference.frame_number}</li>
+                  </ul>
                 </div>
               }
               footer={
-                <>
-                  <div className="d-flex p-2">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => handleShowModal(index)}
-                    >
-                      Review
-                    </Button>
-                  </div>
-                </>
+                <Button
+                  block
+                  variant="primary"
+                  style={{ width: "100%", borderRadius: "0" }}
+                  // size="sm"
+                  onClick={() => handleShowModal(index)}
+                >
+                  Review
+                </Button>
               }
             />
           </Col>
@@ -304,9 +355,9 @@ const JobReview = () => {
             <Col xs={8} className="no-gap">
               <div className="modal-frame p-2">
                 <div className="d-flex">
-                  <h4>Identity Verification</h4> <></>
+                  <h4>Identity Verification</h4>
+                  <h6>Inference Job ID: {jobId}</h6>
                 </div>
-                {/* This column takes up 10/12 of the width, or roughly 80% */}
 
                 {currentIndex !== null && (
                   <>
@@ -314,33 +365,35 @@ const JobReview = () => {
                       Score: {inferences[currentIndex].score.toFixed(2)}
                     </Badge>
                     <p>
-                      Please review the image contents and approve or reject{" "}
+                      Please review the image contents and approve or reject.
                     </p>
-
-                    {/* <Image src={inferences[currentIndex].orig_img} fluid /> */}
                     <MediaCarousel inference={inferences[currentIndex]} />
-
-                    {/* Other details you want to show */}
+                    <div className="d-flex justify-content-start">
+                      <Button
+                        variant="success"
+                        className="m-2"
+                        size="sm"
+                        onClick={() => handleDecision(currentIndex, "approve")}
+                        disabled={
+                          inferences[currentIndex].status === "approved"
+                        }
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="m-2"
+                        variant="outline-danger"
+                        onClick={() => handleDecision(currentIndex, "reject")}
+                        disabled={
+                          inferences[currentIndex].status === "rejected"
+                        }
+                      >
+                        Reject
+                      </Button>
+                    </div>
                   </>
                 )}
-                <div className="d-flex justify-content-start">
-                  <Button
-                    variant="success"
-                    className="m-2"
-                    size="sm"
-                    onClick={() => handleApproval(currentIndex, true)}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="m-2"
-                    variant="outline-danger"
-                    onClick={() => handleApproval(currentIndex, false)}
-                  >
-                    Reject
-                  </Button>
-                </div>
               </div>
             </Col>
 
@@ -394,18 +447,14 @@ const JobReview = () => {
         </Modal.Body>
         <Modal.Footer className="d-flex justify-content-center">
           <Button
-            size="sm"
-            variant="outline-primary"
+            size="lg"
+            variant="primary"
             onClick={handlePrevInference}
             style={{ marginRight: "5px" }}
           >
             Prev
           </Button>
-          <Button
-            size="sm"
-            variant="outline-primary"
-            onClick={handleNextInference}
-          >
+          <Button variant="primary" size="lg" onClick={handleNextInference}>
             Next
           </Button>
           <p className="d-inline ml-2">
@@ -414,6 +463,20 @@ const JobReview = () => {
           {/* <Button variant="secondary" onClick={handleCloseModal}>
             Close
           </Button> */}
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showDetails} onHide={() => setShowDetails(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Info</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <ShowJobDetails />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDetails(false)}>
+            Close
+          </Button>
         </Modal.Footer>
       </Modal>
     </Layout>

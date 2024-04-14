@@ -1,6 +1,10 @@
 const Video = require("../models/videoModel");
+const { publishMessage } = require("../kafkaProducer");
 const { spawn } = require("child_process");
-// const { producer } = require("../kafkaProducer");
+const fs = require("fs");
+
+const Camera = require("../models/cameraModel");
+const Job = require("../models/survJobModel");
 
 exports.getVideos = async (req, res) => {
   try {
@@ -11,54 +15,6 @@ exports.getVideos = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch data" });
   }
 };
-
-// exports.getApplicationForm = async (req, res) => {
-//   try {
-//     const formId = req.params.id;
-//     const applicationForm = await workflowService.fetchApplicationForm(formId);
-//     res.json(applicationForm);
-//   } catch (error) {
-//     console.error("Error in getApplicationForm:", error);
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
-// exports.submitApplication = async (req, res) => {
-//   try {
-//     const { applicationFormId, applicantData } = req.body;
-
-//     // Create and save the new application instance
-//     const newApplicationInstance = new ApplicationInstance({
-//       applicationFormId,
-//       applicantData,
-//     });
-
-//     await newApplicationInstance.save();
-
-//     // create kafka message
-//     await producer.send({
-//       topic: "application-submitted",
-//       messages: [
-//         {
-//           value: JSON.stringify({
-//             applicationId: newApplicationInstance._id,
-//             applicationFormId: newApplicationInstance.applicationFormId,
-//             event_desc: "ApplicationSubmitted",
-//             event_timestamp: new Date(),
-//           }),
-//         },
-//       ],
-//     });
-
-//     res.status(201).json({
-//       message: "Application submitted successfully",
-//       applicationId: newApplicationInstance._id,
-//     });
-//   } catch (error) {
-//     console.error("Error in submitApplication:", error);
-//     res.status(500).json({ error: error.message });
-//   }
-// };
 
 exports.streamVideo = async (req, res) => {
   try {
@@ -152,5 +108,77 @@ exports.streamVideo = async (req, res) => {
   } catch (error) {
     console.error("Server error:", error);
     res.status(500).send("Server error");
+  }
+};
+
+//  Video composer
+
+exports.composeVid = async (req, res) => {
+  try {
+    const jobId = req.params.jobId;
+    const job = await Job.findById(jobId).lean();
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    const updatedClipResults = await Promise.all(
+      job.details.clip_results.map(async (clip) => {
+        const video = await Video.findOne({ vid_location: clip.video }).lean();
+        if (!video) {
+          return clip;
+        }
+        const camera = await Camera.findById(video.camera_id).lean();
+        if (!camera) {
+          return clip;
+        }
+        return {
+          ...clip,
+          inference: `http://localhost:9000/${clip.inference.replace(
+            "./",
+            ""
+          )}`,
+          orig_img: `http://localhost:9000/${clip.orig_img.replace("./", "")}`,
+          lat: camera.geometry.coordinates[1],
+          lng: camera.geometry.coordinates[0],
+          camera_name: camera.cam_name,
+          location: camera.location,
+          status: clip.status, // Adding status to know approved/pending/rejected
+        };
+      })
+    );
+
+    // Only forward approved clips to Kafka for video composition
+    const approvedClips = updatedClipResults.filter(
+      (clip) => clip.status === "approved"
+    );
+
+    if (approvedClips.length > 0) {
+      await publishMessage("composition_jobs", {
+        jobId,
+        clips: approvedClips,
+      })
+        .then(() => {
+          console.log("Composition job details published to Kafka");
+          res.json({
+            message: "Video composition initiated",
+            data: approvedClips,
+          });
+        })
+        .catch((error) => {
+          console.error(
+            "Failed to publish composition job details to Kafka",
+            error
+          );
+          res.status(500).json({ message: "Failed to publish to Kafka" });
+        });
+    } else {
+      res
+        .status(404)
+        .json({ message: "No approved clips available for composition" });
+    }
+  } catch (error) {
+    console.error("Error during video composition setup:", error);
+    res.status(500).json({ message: "Error during video composition setup" });
   }
 };

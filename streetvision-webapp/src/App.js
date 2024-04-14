@@ -24,7 +24,7 @@ function App() {
       <VisaProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<SearchCams />} />
+            <Route path="/" element={<POIStatus />} />
             <Route path="/search-cameras" element={<SearchCams />} />
             <Route path="/events" element={<Events />} />
             <Route path="/events/new-event" element={<POIForm />} />

@@ -93,6 +93,13 @@ exports.createJob = async (req, res) => {
       },
       videos: relevantVideos.map((video) => video._id),
       status: "video_analysis_pending",
+      composition: {
+        state: "pending",
+        inferenceScope: [],
+        date_compiled: null,
+        approvedInferences: [],
+        rejectedInferences: [],
+      },
     });
 
     // Publish job to Kafka (for vid processing later on FIXME: check if vid paths vis)
@@ -124,40 +131,6 @@ exports.createJob = async (req, res) => {
       .json({ error: "Failed to create job", details: error.message });
   }
 };
-
-// fetch job by ID
-// exports.getJobById = async (req, res) => {
-//   try {
-//     const jobId = req.params.jobId;
-//     const job = await Job.findById(jobId);
-
-//     if (!job) {
-//       return res.status(404).json({ message: "Job not found" });
-//     }
-
-//     const updatedClipResults = job.details.clip_results.map((clip) => {
-//       return {
-//         ...clip,
-//         // remove . prefix
-//         inference: `http://localhost:9000/${clip.inference.replace(",", "")}`,
-//         orig_img: `http://localhost:9000/${clip.orig_img.replace(",", "")}`,
-//       };
-//     });
-
-//     const updatedJob = {
-//       ...job._doc,
-//       details: {
-//         ...job.details,
-//         clip_results: updatedClipResults,
-//       },
-//     };
-
-//     res.json(updatedJob);
-//   } catch (error) {
-//     console.error("Error fetching job:", error);
-//     res.status(500).json({ message: "Error fetching job" });
-//   }
-// };
 
 exports.getJobById = async (req, res) => {
   try {
@@ -227,5 +200,46 @@ exports.getJobDetailsByPoiId = async (req, res) => {
   } catch (error) {
     console.error("Failed to fetch jobs", error);
     res.status(500).json({ error: "Failed to fetch jobs" });
+  }
+};
+
+// updating inferences for a job for composition
+
+exports.updateInferenceScope = async (req, res) => {
+  const { jobId, index } = req.params;
+  const { decision } = req.body;
+
+  try {
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).send("Job not found");
+    }
+
+    const indexAsNumber = parseInt(index);
+    if (indexAsNumber < 0 || indexAsNumber >= job.details.clip_results.length) {
+      return res.status(404).send("Inference index out of range");
+    }
+
+    const updatePath = `details.clip_results.${indexAsNumber}.status`;
+
+    const updatedJob = await Job.findOneAndUpdate(
+      { _id: jobId },
+      {
+        $set: {
+          [updatePath]: decision === "approve" ? "approved" : "rejected",
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedJob) {
+      return res.status(404).send("Failed to update inference");
+    }
+
+    // Return the updated inference data
+    res.status(200).json(updatedJob.details.clip_results[indexAsNumber]);
+  } catch (error) {
+    console.error("Error updating inference:", error);
+    res.status(500).send("Internal Server Error");
   }
 };

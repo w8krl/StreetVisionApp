@@ -17,7 +17,13 @@ const jobSchema = new mongoose.Schema(
         ref: "Camera",
       },
     ],
-
+    composition: {
+      state: { type: String, default: "pending" },
+      inferenceScope: { type: [Number], default: [] },
+      date_compiled: { type: Date },
+      approvedInferences: [{ type: Number, default: [] }],
+      rejectedInferences: [{ type: Number, default: [] }],
+    },
     geometry: {
       type: {
         type: String,
@@ -39,7 +45,7 @@ const jobSchema = new mongoose.Schema(
     details: mongoose.Schema.Types.Mixed,
   },
   {
-    timestamps: true, // Optionally include timestamp information for the job
+    timestamps: true,
   }
 );
 

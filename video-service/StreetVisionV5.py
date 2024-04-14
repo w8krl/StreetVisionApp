@@ -205,7 +205,8 @@ class StreetVisionV5:
                         "orig_img": framePathWithBbox,
                         "score": float(scores[idx]),
                         "frame_number": self.frameNumbers[idx],
-                        "video": video
+                        "video": video,
+                        "status": "pending"
                     })
 
                 vid.release()

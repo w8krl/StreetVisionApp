@@ -72,6 +72,8 @@ const MenuOptions = styled.div`
   width: 100%;
   text-transform: uppercase;
   color: white;
+  top: 100px;
+  position: sticky;
 `;
 
 const Option = styled.div`

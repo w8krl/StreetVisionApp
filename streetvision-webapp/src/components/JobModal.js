@@ -229,7 +229,7 @@ const JobModal = ({ poiId, onFormSuccess }) => {
             required
           />
 
-          <Form.Label>Radius</Form.Label>
+          <Form.Label>Radius (meters)</Form.Label>
           <Form.Control
             type="number"
             name="radius" // Ensure this matches the key in your formData state

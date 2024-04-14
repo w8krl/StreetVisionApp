@@ -13,3 +13,5 @@ export { default as CamMap } from "./CamMap";
 
 export { default as JobModal } from "./JobModal";
 export { default as JobSelectModal } from "./JobSelectModal";
+
+export { default as MediaCarousel } from "./MediaCarousel";
