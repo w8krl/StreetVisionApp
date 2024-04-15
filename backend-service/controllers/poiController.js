@@ -20,7 +20,7 @@ exports.createPOI = async (req, res) => {
 
 exports.getPOIs = async (req, res) => {
   try {
-    const pois = await POI.find();
+    const pois = await POI.find().sort({ createdAt: -1 });
     res.json(pois);
   } catch (error) {
     console.error("Error fetching POIs", error);

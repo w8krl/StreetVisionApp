@@ -1,0 +1,60 @@
+.modal-header {
+  background-color: black;
+}
+
+.modal-header h1,
+.modal-header h4 {
+  color: white;
+}
+.modal-header * .btn-close {
+  color: white;
+}
+
+/* no gap */
+/* .no-gap {
+  padding-right: 0;
+  padding-left: 0;
+} */
+
+.modal-header > .btn-close {
+  color: white;
+  filter: invert(1);
+}
+
+/* map-review-box */
+
+.map-review-box {
+  border: solid 2px grey;
+}
+
+.modal-frame {
+  border: solid 1px lightgrey;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* POI Status customisations, turn into styled comps later */
+/* Make bigger */
+/* .modal-job-details,
+.modal-content {
+  width: 80vw;
+} */
+
+.modal-title-white {
+  color: white;
+}
+
+/* BG */
+
+/* .bg-gov-blue {
+  background-color: #1f70b8;
+  color: white;
+} */
+
+.margin-right-10 {
+  margin-right: 10px;
+}
+
+.margin-left-10 {
+  margin-left: 10px;
+}

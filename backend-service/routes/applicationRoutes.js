@@ -13,12 +13,25 @@ router.get("/camerasNear", cameraController.getCamerasNear);
 
 // videos
 router.get("/videos", videoController.getVideos);
+router.get("/stream/video/:videoId/:frameNumber", videoController.streamVideo);
+
+router.post("/video/compose/:jobId", videoController.composeVid);
+
 router.post("/createPoi", poiController.createPOI);
 router.get("/getPoiStatus", poiController.getPOIs);
 router.get("/poi-job-summary", poiController.getPOIJobSummary);
 
 // job by id (for review)
 router.get("/jobs/id/:jobId", jobController.getJobById);
+
+// for modal job status data
+router.get("/poi-job-details/id/:poiId", jobController.getJobDetailsByPoiId);
+
+// Handling inference scope (approval review section
+router.patch(
+  "/jobs/:jobId/inferences/:index",
+  jobController.updateInferenceScope
+);
 
 // list of all pois
 router.get("/poi-job-summary", poiController.getPOIJobSummary);

@@ -37,11 +37,12 @@ const pulse = keyframes`
 const MenuContainer = styled.div`
   grid-area: menu;
   transition: max-width 0.3s ease-out, min-width 0.3s ease-out;
-  background: linear-gradient(
-    100deg,
-    rgba(49, 139, 195, 1) 0%,
-    rgba(93, 201, 205, 1) 35%
-  );
+  // background: linear-gradient(
+  //   100deg,
+  //   rgba(49, 139, 195, 1) 0%,
+  //   rgba(93, 201, 205, 1) 35%
+  // );
+  background: linear-gradient(89deg, rgb(0 48 94) 0%, #0e519d 67%);
   display: flex;
   flex-direction: column;
   gap: 5%;
@@ -71,6 +72,8 @@ const MenuOptions = styled.div`
   width: 100%;
   text-transform: uppercase;
   color: white;
+  top: 100px;
+  position: sticky;
 `;
 
 const Option = styled.div`
@@ -90,7 +93,7 @@ const Option = styled.div`
 
   transition: background-color 0.3s ease;
   &:hover {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.3);
     trnasition: background-color 0.3s ease;
   }
 `;
@@ -98,7 +101,8 @@ const Option = styled.div`
 const ToggleButton = styled.button`
   background: none;
   border: none;
-  color: white;
+  color: black;
+  padding-top: 2rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -106,15 +110,20 @@ const ToggleButton = styled.button`
 `;
 
 const apiMenuData = [
-  { id: 1, label: "Search Cameras", Icon: FaSearch, path: "/search-cameras" },
+  { id: 1, label: "Cameras", Icon: GiCctvCamera, path: "/search-cameras" },
+  {
+    id: 9,
+    label: "Find Person",
+    Icon: FaSearch,
+    path: "/jobs",
+  },
   { id: 2, label: "Events Dashboard", Icon: PiSirenLight, path: "/events" },
-  { id: 3, label: "Surveillance", Icon: GiCctvCamera, path: "/surveillance" },
+  // { id: 3, label: "Surveillance", Icon: GiCctvCamera, path: "/surveillance" },
   { id: 4, label: "Video Decoding", Icon: SiStitcher, path: "/decoding-jobs" },
   // { id: 5, label: "Video Requests", Icon: FaCog, path: "/video-requests" },
   { id: 6, label: "Map View", Icon: FaMapMarkedAlt, path: "/regions" },
   { id: 7, label: "Settings", Icon: FaCog, path: "/settings" },
   { id: 8, label: "Regions", Icon: BsFillPinMapFill, path: "/regions" },
-  { id: 9, label: "POI List", Icon: BsFillPinMapFill, path: "/poi/list" },
 ];
 
 const MenuOptionIcon = styled.div`
