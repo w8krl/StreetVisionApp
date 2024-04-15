@@ -217,6 +217,22 @@ const JobReview = () => {
     );
   };
 
+  const composeVideo = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:9000/api/video/compose/${jobId}`,
+        { method: "POST" }
+      );
+      if (!response.ok) throw new Error("Failed to initiate video composition");
+      toast.success(
+        "Video composition initiated, go to video encoding to monitor progress."
+      );
+    } catch (error) {
+      console.error("Error initiating video composition:", error);
+      toast.error("Failed to initiate video composition.");
+    }
+  };
+
   return (
     <Layout>
       <ToastContainer
@@ -262,7 +278,8 @@ const JobReview = () => {
             <Button
               variant="primary"
               style={{ borderRadius: "0" }} // Set width to "auto" or a specific value like "200px"
-              onClick={() => alert("Button clicked")}
+              onClick={composeVideo}
+              disabled={approvedInferences.length < 1}
             >
               Compose Final Video
             </Button>

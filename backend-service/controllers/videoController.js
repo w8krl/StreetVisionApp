@@ -156,6 +156,7 @@ exports.composeVid = async (req, res) => {
     if (approvedClips.length > 0) {
       await publishMessage("composition_jobs", {
         jobId,
+        jobType: "composition_job",
         clips: approvedClips,
       })
         .then(() => {

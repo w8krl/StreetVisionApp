@@ -1,4 +1,3 @@
-// kafkaConsumer.js
 const { Kafka } = require("kafkajs");
 const Job = require("./models/survJobModel");
 
@@ -11,31 +10,42 @@ const consumer = kafka.consumer({ groupId: "video-processing-status-group" });
 
 const connectConsumer = async () => {
   await consumer.connect();
+  // Subscribe to both topics
   await consumer.subscribe({
     topic: "video_processing_status",
+    fromBeginning: true,
+  });
+  await consumer.subscribe({
+    topic: "composition_job_status",
     fromBeginning: true,
   });
 
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
       const content = JSON.parse(message.value.toString());
-      console.log(`Received message: ${message.value.toString()}`);
+      console.log(
+        `Received message from ${topic}: ${message.value.toString()}`
+      );
 
       try {
         const { jobId, status, details } = content;
-        await Job.findByIdAndUpdate(
-          jobId,
-          { $set: { status, details } },
-          { new: true }
+
+        const updatePath =
+          topic === "composition_job_status"
+            ? { "details.composition": details }
+            : { status, details };
+
+        await Job.findByIdAndUpdate(jobId, { $set: updatePath }, { new: true });
+        console.log(
+          `Job ${jobId} updated successfully with status: ${status} from ${topic}`
         );
-        console.log(`Job ${jobId} updated successfully with status: ${status}`);
       } catch (err) {
         console.error(`Error updating job: ${err.message}`);
       }
     },
   });
 
-  console.log("Kafka Consumer connected and listening.");
+  console.log("Kafka Consumer connected and listening on multiple topics.");
 };
 
 module.exports = { connectConsumer };
