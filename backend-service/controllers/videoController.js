@@ -128,7 +128,7 @@ exports.composeVid = async (req, res) => {
         if (!video) {
           return clip;
         }
-        const camera = await Camera.findById(video.camera_id).lean();
+        const camera = await Camera.findById(video.camera).lean();
         if (!camera) {
           return clip;
         }

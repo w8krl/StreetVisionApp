@@ -54,6 +54,7 @@ const JobReview = () => {
         );
         const data = await response.json();
         setJobData(data);
+        setInferences(data.details.clip_results);
 
         // Setting up approval buckets (default is pending from streetvision )
         const { clip_results } = data.details;
@@ -114,18 +115,19 @@ const JobReview = () => {
     fetchJobData();
   }, []);
 
-  useEffect(() => {
-    if (jobData) {
-      console.log(jobData);
+  // useEffect(() => {
+  //   if (jobData) {
+  //     // console.log(jobData);
 
-      const sortedInferences = jobData.details.clip_results.sort(
-        (a, b) => b.score - a.score
-      );
-      setInferences(sortedInferences);
-    }
-  }, [jobData]);
+  //     // const sortedInferences = jobData.details.clip_results.sort(
+  //     //   (a, b) => b.score - a.score
+  //     // );
+  //     setInferences(sortedInferences);
+  //   }
+  // }, [jobData]);
 
   const handleDecision = async (index, decision) => {
+    console.log(index);
     const url = `http://localhost:9000/api/jobs/${jobId}/inferences/${index}`;
     const options = {
       method: "PATCH",
@@ -295,7 +297,8 @@ const JobReview = () => {
               style={{ backgroundColor: "black" }}
               title={
                 <>
-                  <h5>{inference.camera_name.toUpperCase()}</h5>
+                  <h5>{(inference.camera_name || "").toUpperCase()}</h5>
+
                   <Badge bg="secondary" className="mr-2">
                     Score:{" "}
                     {inference.score ? inference.score.toFixed(2) : "N/A"}
@@ -318,7 +321,7 @@ const JobReview = () => {
               content={
                 <div>
                   <video
-                    id={`video-${inference.frame_number}`}
+                    id={`video-${inference.frame_number}-${index}`}
                     width="100%"
                     preload="none"
                     controls

@@ -9,13 +9,11 @@ class VideoComposer:
         self.jobDataPath = f'./media-store/job-data/{jobId}/composition/'
         self.videoPath = self.jobDataPath + 'final_output.mp4'
         self.videoClips = []
-        self.mergedClips = []
-
         os.makedirs(self.jobDataPath, exist_ok=True)
 
     def verifyData(self):
-        # CHeck datastructure
-        if not all(k in clip for clip in self.clipData for k in ("frame_number", "status", "video", "camera_name", "location")):
+        required_keys = {"frame_number", "status", "video", "camera_name", "location"}
+        if not all(all(k in clip for k in required_keys) for clip in self.clipData):
             raise ValueError("Data is missing required fields")
 
     def frameToTime(self, frameNumber, fps=30):
@@ -24,43 +22,38 @@ class VideoComposer:
     def composeVideo(self):
         self.verifyData()
         
-        clips = []
+        video_groups = {}
         for clip in self.clipData:
             if clip['status'] == 'approved':
+                video_path = clip['video']
+                if video_path not in video_groups:
+                    video_groups[video_path] = []
                 startTime = max(0, self.frameToTime(clip['frame_number']) - 5)
                 endTime = self.frameToTime(clip['frame_number']) + 5
-                clips.append((startTime, endTime, clip['video'], clip['camera_name'], clip['location']))
+                video_groups[video_path].append((startTime, endTime, clip['camera_name'], clip['location']))
 
-        clips.sort()
-        for start, end, video, cameraName, location in clips:
-            if not self.mergedClips or start > self.mergedClips[-1][1]:
-                self.mergedClips.append([start, end, video, cameraName, location])
-            else:
-                self.mergedClips[-1][1] = max(self.mergedClips[-1][1], end)
+        for video_path, clips in video_groups.items():
+            clips.sort()
+            merged_clips = []
+            for start, end, cameraName, location in clips:
+                if not merged_clips or start > merged_clips[-1][1]:
+                    merged_clips.append([start, end, cameraName, location])
+                else:
+                    merged_clips[-1][1] = max(merged_clips[-1][1], end)
 
-        for start, end, videoPath, cameraName, location in self.mergedClips:
-            clip = VideoFileClip(videoPath).subclip(start, end)
-            txtClip = TextClip(f"{cameraName} - {location}", fontsize=24, color='white', font="Arial-Bold")
-            txtClip = txtClip.set_position('bottom').set_duration(clip.duration)
-            video = CompositeVideoClip([clip, txtClip])
-            self.videoClips.append(video)
+            for start, end, cameraName, location in merged_clips:
+                clip = VideoFileClip(video_path).subclip(start, end)
+                txtClip = TextClip(f"{cameraName} - {location}", fontsize=24, color='white', font="Arial-Bold")
+                txtClip = txtClip.set_position('bottom').set_duration(clip.duration)
+                video = CompositeVideoClip([clip, txtClip])
+                self.videoClips.append(video)
 
-        finalClip = concatenate_videoclips(self.videoClips)
+        finalClip = concatenate_videoclips(self.videoClips, method="compose")
         finalClip.write_videofile(self.videoPath, codec="libx264", fps=24)
 
     def showResults(self):
-        # Returning JSON  for KAFKA
-        mergedClipsDetails = [
-            {
-                "start_time": clip[0],
-                "end_time": clip[1],
-                "video_path": clip[2],
-                "camera_name": clip[3],
-                "location": clip[4]
-            } for clip in self.mergedClips
-        ]
+        # JSON output for potential use in messaging or logging
         return {
             "video_path": self.videoPath,
-            "number_of_clips": len(self.videoClips),
-            "merged_clips": mergedClipsDetails
+            "number_of_clips": len(self.videoClips)
         }
