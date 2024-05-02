@@ -48,7 +48,7 @@ services:
       context: ./streetvision-webapp
       dockerfile: Dockerfile
     ports:
-      - "3000:3000" # Maps port 80 from the container to 3004 on the host
+      - "3000:3000"
     depends_on:
       - streetvision-db
       - backend-service
@@ -76,58 +76,60 @@ services:
       - ./backend-service:/usr/src/app
       - ./video-service/media-store:/media-store
     ports:
-      - "9000:9000" # note to self, move all services to 9000 range
-    # depends_on:
-    # - kafka
-    # - workflow-service
+      - "9000:9000"
+    depends_on:
+      - streetvision-db
+      - kafka
     environment:
-      - MONGODB_URI=mongodb://streetvision-db:27017/streetvision?authSource=admin
-      # - KAFKA_BROKER_URL=kafka:29092
-      # - WORKFLOW_SERVICE_URL=http://workflow-service:9000
+      MONGODB_URI: mongodb://streetvision-db:27017/streetvision?authSource=admin
+      # KAFKA_BROKER_URL: kafka:29092
+      # WORKFLOW_SERVICE_URL: http://workflow-service:9000
     networks:
       shared_network:
         aliases:
           - backend
-  es8:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
-    container_name: es8
-    environment:
-      - "node.name=es8"
-      - "discovery.type=single-node"
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - "xpack.security.enabled=false"
-      - "xpack.security.enrollment.enabled=false" # Enable enrollment - to enable later
-    volumes:
-      # - ./elasticsearch/config:/usr/share/elasticsearch/config
-      - ./es-data:/usr/share/elasticsearch/data # Persist data
-    ports:
-      - "9200:9200" # Expose Elasticsearch HTTP port
-      - "9300:9300" # Expose Elasticsearch TCP port
-    networks:
-      - shared_network
-  # video-service: # not needed for now, running local to use GPU - 10 times faster :D, on cloud reenable
-  #   build:
-  #     context: ./video-service
-  #     dockerfile: Dockerfile
-  #   restart: always
-  #   volumes:
-  #     - ./video-service:/usr/src/app
-  #     - ./media-store:/usr/src/app/job-data
-  #   depends_on:
-  #     - kafka
+    command: sh -c "npm test && npm start"
+
+  # es8:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+  #   container_name: es8
   #   environment:
-  #     KAFKA_BROKER_URL: "kafka:29092"
+  #     - "node.name=es8"
+  #     - "discovery.type=single-node"
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #     - "xpack.security.enabled=false"
+  #     - "xpack.security.enrollment.enabled=false" # Enable enrollment - to enable later
+  #   volumes:
+  #     # - ./elasticsearch/config:/usr/share/elasticsearch/config
+  #     - ./es-data:/usr/share/elasticsearch/data # Persist data
+  #   ports:
+  #     - "9200:9200" # Expose Elasticsearch HTTP port
+  #     - "9300:9300" # Expose Elasticsearch TCP port
   #   networks:
   #     - shared_network
+  # # video-service: # not needed for now, running local to use GPU - 10 times faster :D, on cloud reenable
+  # #   build:
+  # #     context: ./video-service
+  # #     dockerfile: Dockerfile
+  # #   restart: always
+  # #   volumes:
+  # #     - ./video-service:/usr/src/app
+  # #     - ./media-store:/usr/src/app/job-data
+  # #   depends_on:
+  # #     - kafka
+  # #   environment:
+  # #     KAFKA_BROKER_URL: "kafka:29092"
+  # #   networks:
+  # #     - shared_network
 
-  kibana8:
-    image: docker.elastic.co/kibana/kibana:8.12.2
-    container_name: kibana8
-    environment:
-      - "ELASTICSEARCH_HOSTS=http://es8:9200"
-    ports:
-      - "5601:5601" # Expose Kibana port
-    networks:
-      - shared_network
-    depends_on:
-      - es8
+  # kibana8:
+  #   image: docker.elastic.co/kibana/kibana:8.12.2
+  #   container_name: kibana8
+  #   environment:
+  #     - "ELASTICSEARCH_HOSTS=http://es8:9200"
+  #   ports:
+  #     - "5601:5601" # Expose Kibana port
+  #   networks:
+  #     - shared_network
+  #   depends_on:
+  #     - es8
