@@ -13,7 +13,7 @@ import POIForm from "./pages/POIForm";
 import POIList from "./pages/POIList";
 import JobReview from "./pages/JobReview";
 import POIStatus from "./pages/POIStatus";
-import { VisaProvider } from "./components/visa/VisaContext"; // Update import path if necessary
+import { VisaProvider } from "./components/visa/VisaContext";
 import "./style.css";
 
 function App() {
