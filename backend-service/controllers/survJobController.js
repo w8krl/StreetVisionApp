@@ -18,7 +18,7 @@ const POI = require("../models/poiModel");
 // FIXME: consider adding ids to kaf msg
 
 exports.createJob = async (req, res) => {
-  console.log(req.body);
+  console.log("XXXXX", req.body);
   try {
     const { poiId, location, radius, fromDate, toDate, coordinates } = req.body;
 
@@ -62,17 +62,35 @@ exports.createJob = async (req, res) => {
       is_active: true,
     });
 
-    // Find videos for active cameras within the time range
+    console.log(
+      "Camera IDs:",
+      camsInRange.map((cam) => cam._id)
+    );
+
+    // Cast as date objects
+
     const relevantVideos = await Video.find({
-      camera_id: { $in: camsInRange.map((camera) => camera._id) },
-      start_time: { $lte: toDate },
-      end_time: { $gte: fromDate },
+      camera: { $in: camsInRange.map((camera) => camera._id) },
+      start_time: { $lte: new Date(toDate) },
+      end_time: { $gte: new Date(fromDate) },
     });
+
+    // // Find videos for active cameras within the time range
+    // const relevantVideos = await Video.find({
+    //   camera_id: { $in: camsInRange.map((camera) => camera._id) },
+    //   start_time: { $lte: toDate },
+    //   end_time: { $gte: fromDate },
+    // });
+    console.log("Cams in Range:", camsInRange.length);
+    console.log("Relevant Videos Found:", relevantVideos.length);
     if (relevantVideos.length === 0) {
       return res
         .status(404)
         .json({ error: "No videos found for the given time range" });
     }
+
+    console.log("Cams in Range:", camsInRange.length);
+    console.log("Relevant Videos Found:", relevantVideos.length);
 
     const poiDocument = await POI.findById(poiId);
     if (!poiDocument) {
@@ -112,7 +130,7 @@ exports.createJob = async (req, res) => {
       fromDate,
       toDate,
       jobType: "video_analysis",
-      topN: 30,
+      topN: 5,
       videos: relevantVideos.map((video) => video.vid_location.toString()),
     };
     // cameraIds: camsInRange.map((camera) => camera.cam_name.toString()),
@@ -133,6 +151,7 @@ exports.createJob = async (req, res) => {
 };
 
 exports.getJobById = async (req, res) => {
+  console.log("XXXXXXXX KARL");
   try {
     const jobId = req.params.jobId;
     const job = await Job.findById(jobId).lean();
@@ -145,21 +164,29 @@ exports.getJobById = async (req, res) => {
       job.details.clip_results.map(async (clip) => {
         const video = await Video.findOne({ vid_location: clip.video }).lean();
         if (!video) {
+          console.log("No video found for clip:", clip);
           return clip;
         }
 
-        const camera = await Camera.findById(video.camera_id).lean();
+        const camera = await Camera.findById(video.camera).lean();
         if (!camera) {
+          console.log("No camera found for clip:", clip);
           return clip;
         }
+
+        const inferenceURL = `http://localhost:9000/${clip.inference.replace(
+          /^\.\//,
+          ""
+        )}`;
+        const origImgURL = `http://localhost:9000/${clip.orig_img.replace(
+          /^\.\//,
+          ""
+        )}`;
 
         return {
           ...clip,
-          inference: `http://localhost:9000/${clip.inference.replace(
-            "./",
-            ""
-          )}`,
-          orig_img: `http://localhost:9000/${clip.orig_img.replace("./", "")}`,
+          inference: inferenceURL,
+          orig_img: origImgURL,
           lat: camera.geometry.coordinates[1],
           lng: camera.geometry.coordinates[0],
           camera_name: camera.cam_name,

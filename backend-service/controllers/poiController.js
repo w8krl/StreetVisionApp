@@ -4,6 +4,7 @@ const Job = require("../models/survJobModel");
 
 exports.createPOI = async (req, res) => {
   try {
+    console.log(req.body);
     const newPOI = new POI(req.body);
     const savedPOI = await newPOI.save();
     res.status(201).json({

@@ -13,7 +13,7 @@ const client = new kafka.KafkaClient({ kafkaHost: "kafka:9092" });
 //   client,
 //   [{ topic: "workflow-events", partition: 0 }],
 //   { autoCommit: true }
-// );
+// );xw
 
 // consumer.on("message", function (message) {
 //   console.log("Received message:", message);
