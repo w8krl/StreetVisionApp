@@ -17,7 +17,7 @@ import { VisaProvider } from "./components/visa/VisaContext";
 import "./style.css";
 
 function App() {
-  const isLoggedIn = /* logic to check if user is logged in */ false;
+  const isLoggedIn = false;
 
   return (
     <Provider store={store}>
@@ -41,7 +41,6 @@ function App() {
 
             {/* <Route path="/login" element={<Login />} /> */}
             {/* <Route path="/suggested-results" element={<SuggestedResults />} /> */}
-            {/* Protected routes wrapped in a single GridContainer for layout */}
           </Routes>
         </Router>
       </VisaProvider>
